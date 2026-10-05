@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My PC Checker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#090b12; --bg2:#0f1320; --panel:#131829; --panel2:#171d33;
+  --line:rgba(255,255,255,0.08);
+  --violet:#7c5cff; --cyan:#2fe6d9; --amber:#ffb454; --red:#ff5c7a; --green:#3ee08a;
+  --text:#eef0f8; --sub:#9aa3c0; --faint:#5c6389;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(1100px 600px at 15% -10%, rgba(124,92,255,0.16), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(47,230,217,0.10), transparent 55%);
+}
+h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif}
+.mono{font-family:'JetBrains Mono',monospace}
+.wrap{max-width:1180px; margin:0 auto; padding:0 24px}
+a{color:inherit}
+::selection{background:rgba(124,92,255,0.4)}
+
+/* NAV */
+nav{position:sticky; top:0; z-index:40; backdrop-filter:blur(14px);
+  background:rgba(9,11,18,0.75); border-bottom:1px solid var(--line);
+  padding-top:env(safe-area-inset-top,0px);}
+.navrow{display:flex; align-items:center; justify-content:space-between; height:64px}
+.brand{display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; letter-spacing:-0.01em}
+.brand-mark{width:26px; height:26px; border-radius:8px; background:linear-gradient(135deg,var(--violet),var(--cyan)); flex:none}
+.navlinks{display:flex; gap:28px; font-size:14px; color:var(--sub)}
+.navlinks span{cursor:default}
+
+/* HERO */
+.hero{padding:76px 0 54px; text-align:center}
+.eyebrow{color:var(--cyan); font-size:13px; font-weight:600; letter-spacing:0.02em}
+.hero h1{font-size:clamp(36px,6vw,64px); line-height:1.04; margin:14px 0 16px; font-weight:700}
+.hero h1 em{font-style:normal; background:linear-gradient(100deg,var(--violet),var(--cyan)); -webkit-background-clip:text; background-clip:text; color:transparent}
+.hero p{color:var(--sub); font-size:17px; max-width:560px; margin:0 auto 36px; line-height:1.6}
+
+.searchbox{max-width:640px; margin:0 auto; position:relative}
+.searchbox input{
+  width:100%; padding:18px 54px 18px 20px; border-radius:16px; border:1px solid var(--line);
+  background:var(--panel); color:var(--text); font-size:16px; font-family:inherit; outline:none;
+  transition:border-color .15s, box-shadow .15s;
+}
+.searchbox input:focus{border-color:var(--violet); box-shadow:0 0 0 4px rgba(124,92,255,0.15)}
+.searchbox svg{position:absolute; right:18px; top:50%; transform:translateY(-50%); color:var(--faint)}
+.suggest{position:absolute; left:0; right:0; top:calc(100% + 8px); background:var(--panel2); border:1px solid var(--line);
+  border-radius:14px; overflow:hidden; text-align:left; z-index:30; box-shadow:0 20px 50px rgba(0,0,0,0.5); display:none}
+.suggest.show{display:block}
+.suggest button{width:100%; display:flex; gap:12px; align-items:center; padding:12px 16px; background:none; border:none; color:var(--text); cursor:pointer; font-family:inherit; font-size:14px; text-align:left}
+.suggest button:hover{background:rgba(124,92,255,0.12)}
+.suggest .sw{width:34px; height:34px; border-radius:8px; flex:none}
+.suggest small{color:var(--faint); display:block}
+
+/* SECTION HEADS */
+.sechead{display:flex; align-items:baseline; justify-content:space-between; margin:52px 0 20px}
+.sechead h2{font-size:22px; font-weight:600; margin:0}
+.sechead p{color:var(--faint); font-size:13px; margin:0}
+
+/* GAME GRID */
+.grid{display:grid; grid-template-columns:repeat(5,1fr); gap:16px}
+@media(max-width:980px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}}
+.gcard{background:var(--panel); border:1px solid var(--line); border-radius:16px; overflow:hidden; cursor:pointer;
+  transition:transform .15s, border-color .15s, box-shadow .15s;}
+.gcard:hover{transform:translateY(-4px); border-color:rgba(124,92,255,0.5); box-shadow:0 16px 40px rgba(124,92,255,0.12)}
+.gcard .cover{height:104px; position:relative; display:flex; align-items:flex-end; padding:10px; overflow:hidden}
+.gcard .cover-icon{position:absolute; right:8px; top:2px; font-size:52px; opacity:0.9; filter:drop-shadow(0 6px 14px rgba(0,0,0,0.45)); line-height:1}
+.gcard .cover .tag{font-size:10px; padding:3px 8px; border-radius:20px; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); font-weight:600; z-index:2}
+.gcard .body{padding:12px 14px 16px}
+.gcard h3{font-size:14.5px; margin:0 0 4px; font-weight:600}
+.gcard .meta{color:var(--faint); font-size:12px; display:flex; justify-content:space-between}
+
+/* BUTTONS */
+.btn{display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:12px; border:1px solid var(--line);
+  background:var(--panel2); color:var(--text); font-family:inherit; font-weight:600; font-size:14px; cursor:pointer;
+  transition:border-color .15s, background .15s;}
+.btn:hover{border-color:var(--violet)}
+.btn-primary{background:linear-gradient(100deg,var(--violet),#5b3fe0); border:none}
+.btn-primary:hover{filter:brightness(1.1)}
+
+/* MODAL */
+.overlay{position:fixed; inset:0; background:rgba(4,5,10,0.72); backdrop-filter:blur(6px); z-index:100; display:none; align-items:flex-start; justify-content:center; overflow-y:auto; padding:5vh 16px 60px}
+.overlay.show{display:flex}
+.modal{background:var(--bg2); border:1px solid var(--line); border-radius:22px; max-width:880px; width:100%; overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,0.6)}
+.mhead{position:relative; height:150px; padding:20px; display:flex; flex-direction:column; justify-content:flex-end}
+.mhead .close{position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid var(--line); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center}
+.mhead .micon{position:absolute; right:22px; top:14px; font-size:64px; opacity:0.92; filter:drop-shadow(0 8px 18px rgba(0,0,0,0.5))}
+.mhead h2{margin:0; font-size:26px}
+.mhead .meta{color:rgba(255,255,255,0.75); font-size:13px; margin-top:4px}
+.mbody{padding:26px}
+.tabbar{display:flex; gap:6px; border-bottom:1px solid var(--line); margin-bottom:22px}
+.tabbtn{padding:10px 16px; background:none; border:none; color:var(--faint); font-family:inherit; font-weight:600; font-size:14px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px}
+.tabbtn.active{color:var(--text); border-color:var(--violet)}
+.tabpane{display:none}
+.tabpane.active{display:block}
+
+/* REQS TABLE */
+.reqgrid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+@media(max-width:640px){.reqgrid{grid-template-columns:1fr}}
+.reqcard{border:1px solid var(--line); border-radius:14px; padding:16px 18px; background:var(--panel)}
+.reqcard h4{margin:0 0 12px; font-size:12px; letter-spacing:0.04em; color:var(--faint); font-weight:700}
+.reqcard.rec h4{color:var(--cyan)}
+.reqrow{display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-top:1px solid var(--line); font-size:13.5px}
+.reqrow:first-of-type{border-top:none}
+.reqrow .k{color:var(--faint); flex:none; width:70px}
+.reqrow .v{text-align:right}
+
+/* FORM */
+.formgrid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+@media(max-width:640px){.formgrid{grid-template-columns:1fr}}
+.field label{display:block; font-size:12px; color:var(--faint); margin-bottom:6px; font-weight:600}
+.field select, .field input{width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); font-family:inherit; font-size:14px}
+.field select:focus, .field input:focus{outline:none; border-color:var(--violet)}
+.pillrow{display:flex; gap:8px; flex-wrap:wrap; margin-top:4px}
+.pill{padding:8px 14px; border-radius:20px; border:1px solid var(--line); font-size:13px; cursor:pointer; background:var(--panel); color:var(--sub)}
+.pill.active{background:rgba(124,92,255,0.18); border-color:var(--violet); color:var(--text)}
+
+/* RESULT */
+.resultbox{margin-top:24px; border-radius:16px; padding:22px; border:1px solid var(--line)}
+.resultbox.ok{background:linear-gradient(135deg,rgba(62,224,138,0.10),rgba(62,224,138,0.02)); border-color:rgba(62,224,138,0.35)}
+.resultbox.warn{background:linear-gradient(135deg,rgba(255,180,84,0.10),rgba(255,180,84,0.02)); border-color:rgba(255,180,84,0.35)}
+.resultbox.bad{background:linear-gradient(135deg,rgba(255,92,122,0.10),rgba(255,92,122,0.02)); border-color:rgba(255,92,122,0.35)}
+.verdict{display:flex; align-items:center; gap:12px; font-size:19px; font-weight:700; margin-bottom:4px}
+.dot{width:11px; height:11px; border-radius:50%; flex:none}
+.dot.ok{background:var(--green); box-shadow:0 0 10px var(--green)}
+.dot.warn{background:var(--amber); box-shadow:0 0 10px var(--amber)}
+.dot.bad{background:var(--red); box-shadow:0 0 10px var(--red)}
+.subverdict{color:var(--sub); font-size:13.5px; margin-bottom:18px}
+
+.fpsrow{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px}
+@media(max-width:640px){.fpsrow{grid-template-columns:repeat(2,1fr)}}
+.fpscell{background:rgba(255,255,255,0.03); border:1px solid var(--line); border-radius:12px; padding:12px; text-align:center}
+.fpscell .lbl{font-size:11px; color:var(--faint); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.03em}
+.fpscell .num{font-size:22px; font-weight:700; font-family:'Space Grotesk',sans-serif}
+.fpscell.sel{border-color:var(--violet); background:rgba(124,92,255,0.10)}
+
+.bars{margin-bottom:18px}
+.barrow{display:grid; grid-template-columns:80px 1fr 44px; align-items:center; gap:10px; margin-bottom:9px; font-size:12.5px}
+.bartrack{height:8px; border-radius:6px; background:rgba(255,255,255,0.06); overflow:hidden}
+.barfill{height:100%; border-radius:6px; background:linear-gradient(90deg,var(--violet),var(--cyan))}
+
+.bottleneck{display:flex; gap:10px; align-items:flex-start; padding:14px 16px; border-radius:12px; background:rgba(255,255,255,0.03); border:1px solid var(--line); font-size:13.5px; color:var(--sub); margin-bottom:18px}
+.bottleneck b{color:var(--text)}
+
+.upgrades h4{font-size:13px; color:var(--faint); margin:0 0 10px; font-weight:700}
+.upglist{display:flex; flex-direction:column; gap:8px}
+.upgitem{display:flex; justify-content:space-between; gap:10px; padding:10px 14px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid var(--line); font-size:13.5px}
+.upgitem span:first-child{color:var(--sub)}
+
+footer{border-top:1px solid var(--line); margin-top:80px; padding:28px 0; text-align:center; color:var(--faint); font-size:13px}
+
+/* ---- v2: flatter, database-style theme ---- */
+:root{--bg:#0d0e11;--bg2:#131418;--panel:#17181d;--panel2:#1d1f25;--line:#2a2c34;
+ --violet:#f0692e;--cyan:#f0692e;--green:#5fbf7f;--amber:#e0a63c;--red:#e5534b;
+ --text:#ebe8e2;--sub:#a09d96;--faint:#6d6a64}
+body{background:var(--bg);background-image:none;font-family:'Barlow',sans-serif;font-size:16px}
+h1,h2,h3,.display,.brand{font-family:'Barlow Condensed',sans-serif}
+nav{backdrop-filter:none;background:var(--bg)}
+.brand{font-size:22px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.brand-mark{width:18px;height:18px;border-radius:2px;background:var(--violet)}
+.brand span{color:var(--violet)!important}
+.navlinks{font-size:14px}
+.hero{text-align:left;padding:56px 0 36px}
+.eyebrow{color:var(--faint);letter-spacing:.1em;text-transform:uppercase;font-size:12px;font-weight:500}
+.hero h1{font-size:clamp(44px,7vw,84px);text-transform:uppercase;line-height:.95;letter-spacing:.005em;margin:10px 0 16px}
+.hero h1 em{background:none;-webkit-text-fill-color:currentColor;color:var(--violet)}
+.hero p{margin:0 0 26px;font-size:18px;max-width:520px}
+.searchbox{margin:0;max-width:720px}
+.searchbox input{border-radius:3px;padding:16px 50px 16px 18px;font-family:inherit;background:var(--panel)}
+.searchbox input:focus{box-shadow:none;border-color:var(--violet)}
+.suggest{border-radius:3px;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.suggest .sw{border-radius:2px}
+.stats{display:flex;gap:28px;margin-top:18px;color:var(--faint);font-size:13px}
+.stats b{color:var(--text);font-family:'JetBrains Mono',monospace;font-weight:500;margin-right:6px}
+.sechead{margin:40px 0 14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.sechead h2{font-size:28px;text-transform:uppercase;letter-spacing:.02em}
+.glist{display:block;border:1px solid var(--line);border-radius:3px;background:var(--panel)}
+.grow{display:grid;grid-template-columns:72px 1fr 170px 56px 170px;gap:16px;align-items:center;padding:9px 14px;border-top:1px solid var(--line);cursor:pointer;font-size:14.5px}
+.grow:first-child{border-top:none}
+.grow:not(.ghead):hover{background:var(--panel2)}
+.grow:not(.ghead):hover .c-title{color:var(--violet)}
+.ghead{cursor:default;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);padding:8px 14px}
+.c-title{font-weight:600;font-size:16px}
+.c-genre,.c-year,.c-gpu{color:var(--sub);font-size:13px}
+.thumb{width:72px;height:40px;border-radius:2px;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font:700 16px 'Barlow Condensed',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.8)}
+@media(max-width:720px){.grow{grid-template-columns:72px 1fr 44px}.c-genre,.c-gpu{display:none}.stats{flex-wrap:wrap;gap:14px}}
+.btn,.pill{border-radius:3px}
+.btn-primary{background:var(--violet);color:#150a05}
+.btn-primary:hover{filter:none;background:#ff7a40}
+.overlay{backdrop-filter:none;background:rgba(0,0,0,.78)}
+.modal{border-radius:4px;box-shadow:0 20px 60px rgba(0,0,0,.6);background:var(--bg2)}
+.mhead{height:190px;background-color:#222}
+.mhead h2{font-size:44px;text-transform:uppercase;line-height:1;color:#fff}
+.mhead .close{border-radius:3px;background:rgba(0,0,0,.55)}
+.coverbtn{position:absolute;top:14px;left:20px;font-size:12px;padding:6px 10px;border:1px solid rgba(255,255,255,.35);border-radius:3px;background:rgba(0,0,0,.5);color:#fff;cursor:pointer}
+.tabbtn{font-family:'Barlow Condensed',sans-serif;font-size:17px;text-transform:uppercase;letter-spacing:.04em}
+.reqcard,.resultbox,.fpscell,.bottleneck,.upgitem{border-radius:3px}
+.reqcard.rec h4{color:var(--violet)}
+.field select,.field input{border-radius:3px}
+.pill.active{background:rgba(240,105,46,.14);border-color:var(--violet)}
+.pf-opt:hover{background:var(--panel2)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.fpscell.sel{background:rgba(240,105,46,.10)}
+.resultbox.ok{background:rgba(95,191,127,.07)}.resultbox.warn{background:rgba(224,166,60,.07)}.resultbox.bad{background:rgba(229,83,75,.07)}
+.dot{box-shadow:none!important}
+.barfill{background:var(--violet)}
+.fpscell .num{font-family:'Barlow Condensed',sans-serif;font-size:28px}
+.verdict{font-family:'Barlow Condensed',sans-serif;font-size:24px;text-transform:uppercase}
+.reqcard h4{font-family:'Barlow Condensed',sans-serif;font-size:14px}
+::selection{background:rgba(240,105,46,.4)}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap navrow">
+  <div class="brand"><div class="brand-mark"></div>My<span style="color:var(--violet)">PC</span>Checker</div>
+  <div class="navlinks"><a href="#mypc-section" onclick="document.getElementById('mypc-section').scrollIntoView()" style="cursor:pointer">My PC</a><a onclick="document.getElementById('whatcanrun-section').scrollIntoView()" style="cursor:pointer">Games I Can Run</a><span>Games</span></div>
+</div></nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">System requirements &amp; FPS estimates</div>
+    <h1>My PC <em>Checker</em></h1>
+    <p>Check system requirements, estimate FPS, and find out exactly how your PC will perform — before you buy or install anything.</p>
+    <div class="searchbox">
+      <input id="searchInput" type="text" placeholder="Search for a game… try “Valorant”" autocomplete="off">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <div class="suggest" id="suggest"></div>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="sechead" id="mypc-section"><h2>My PC</h2><p>Saved once, used everywhere</p></div>
+  <div id="mypcCard"></div>
+
+  <div class="sechead" id="whatcanrun-section"><h2>Games I Can Run</h2><p id="wcrSub">Save your PC above to see this</p></div>
+  <div id="wcrPanel" style="margin-bottom:10px"></div>
+  <div id="wcrList" class="glist" style="margin-bottom:60px"></div>
+
+  <div class="sechead"><h2>Games</h2><div style="display:flex;gap:16px;align-items:center"><p id="gameCount"></p><label class="btn" style="padding:7px 12px;font-size:13px">Import games…<input type="file" id="importInput" accept=".csv,.json,.txt" hidden></label></div></div>
+  <div class="grid" id="gameGrid"></div>
+
+  <div class="sechead" id="hw-section"><h2>Hardware Database</h2><p id="hwCount"></p></div>
+  <div class="tabbar" id="hwTypeTabs">
+    <button class="tabbtn active" data-k="gpu">GPUs</button>
+    <button class="tabbtn" data-k="cpu">CPUs</button>
+  </div>
+  <div class="pillrow" id="hwFormTabs" style="margin:14px 0">
+    <div class="pill active" data-f="Desktop">🖥️ Desktop</div>
+    <div class="pill" data-f="Laptop">💻 Laptop</div>
+  </div>
+  <div class="formgrid" style="grid-template-columns:2fr 1fr 1fr;margin-bottom:14px">
+    <div class="field"><label>Search</label><input type="text" id="hwSearch" placeholder="Model name…"></div>
+    <div class="field"><label>Manufacturer</label><select id="hwMfr"><option value="">All</option></select></div>
+    <div class="field"><label>Tier</label><select id="hwTier"><option value="">All</option></select></div>
+  </div>
+  <div class="glist" id="hwList" style="margin-bottom:12px"></div>
+  <div class="subverdict" style="margin-bottom:60px">Detailed specs (cores, clocks, TDP, VRAM, bus) are filled in for commonly-used models; parts without a detail panel still carry a performance score used across the site, but full specs aren't verified yet — check the manufacturer's page for exact numbers. No manufacturer logos are used here, for licensing reasons.</div>
+
+  <div class="sechead"><h2>Compare Hardware</h2><p>Side-by-side performance scoring</p></div>
+  <div class="reqgrid" style="margin-bottom:20px">
+    <div class="reqcard">
+      <h4>COMPONENT A</h4>
+      <div class="formgrid" style="grid-template-columns:1fr">
+        <div class="field"><label>GPU</label><select id="cmpGpuA"></select></div>
+        <div class="field"><label>CPU</label><select id="cmpCpuA"></select></div>
+      </div>
+    </div>
+    <div class="reqcard rec">
+      <h4>COMPONENT B</h4>
+      <div class="formgrid" style="grid-template-columns:1fr">
+        <div class="field"><label>GPU</label><select id="cmpGpuB"></select></div>
+        <div class="field"><label>CPU</label><select id="cmpCpuB"></select></div>
+      </div>
+    </div>
+  </div>
+  <div id="cmpResult" style="margin-bottom:60px"></div>
+</main>
+
+<footer>All FPS figures on this site are modeled estimates, not guaranteed benchmark results. Real-world FPS varies with drivers, game updates, background apps, temperatures, laptop GPU power limits, single- vs dual-channel RAM, and the exact silicon in your specific GPU/CPU. Treat every number here as a ballpark, not a promise.</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="mhead" id="mhead">
+      <button class="close" id="closeBtn">✕</button>
+      <label class="coverbtn">Add cover art<input type="file" id="coverInput" accept="image/*" hidden></label>
+      <h2 id="mTitle"></h2>
+      <div class="meta" id="mMeta"></div>
+    </div>
+    <div class="mbody">
+      <div class="tabbar">
+        <button class="tabbtn active" data-tab="reqs">Requirements</button>
+        <button class="tabbtn" data-tab="check">Check My PC</button>
+      </div>
+
+      <div class="tabpane active" id="tab-reqs">
+        <div class="reqgrid">
+          <div class="reqcard min" id="minCard"></div>
+          <div class="reqcard rec" id="recCard"></div>
+        </div>
+        <div id="pcFitBanner"></div>
+        <div class="subverdict" id="estNote" style="margin-top:14px"></div>
+      </div>
+
+      <div class="tabpane" id="tab-check">
+        <div class="formgrid">
+          <div class="field"><label>Graphics Card (GPU)</label><select id="gpuSel"></select></div>
+          <div class="field"><label>Processor (CPU)</label><select id="cpuSel"></select></div>
+          <div class="field"><label>Memory (RAM)</label><select id="ramSel">
+            <option value="4">4 GB</option><option value="6">6 GB</option><option value="8">8 GB</option>
+            <option value="12">12 GB</option><option value="16" selected>16 GB</option><option value="24">24 GB</option>
+            <option value="32">32 GB</option><option value="48">48 GB</option><option value="64">64 GB</option>
+            <option value="96">96 GB</option><option value="128">128 GB</option>
+          </select></div>
+          <div class="field"><label>Resolution</label>
+            <div class="pillrow" id="resPills">
+              <div class="pill active" data-res="1080">1080p</div>
+              <div class="pill" data-res="1440">1440p</div>
+              <div class="pill" data-res="2160">4K</div>
+            </div>
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px"><label>Graphics Preset</label>
+          <div class="pillrow" id="qualPills">
+            <div class="pill" data-q="Low">Low</div>
+            <div class="pill" data-q="Medium">Medium</div>
+            <div class="pill active" data-q="High">High</div>
+            <div class="pill" data-q="Ultra">Ultra</div>
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px"><label>Upscaling (DLSS / FSR / XeSS)</label>
+          <div class="pillrow" id="upscalePills">
+            <div class="pill active" data-u="Off">Off</div>
+            <div class="pill" data-u="Quality">Quality</div>
+            <div class="pill" data-u="Balanced">Balanced</div>
+            <div class="pill" data-u="Performance">Performance</div>
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px"><label>Frame Generation</label>
+          <div class="pillrow" id="fgPills">
+            <div class="pill active" data-fg="off">Off</div>
+            <div class="pill" data-fg="2x">2× (RTX 40/50, FSR3)</div>
+            <div class="pill" data-fg="4x">4× (RTX 50 MFG)</div>
+          </div>
+        </div>
+        <div style="margin-top:20px"><button class="btn btn-primary" id="checkBtn">Estimate my FPS →</button></div>
+        <div id="resultSlot"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- DATA ----------
+const GPU = {"Integrated Graphics":4,"GTX 950":13,"GTX 1050 Ti":15,"GTX 1060":22,"GTX 1070":26,"GTX 1070 Ti":29,
+"GTX 1080":32,"GTX 1080 Ti":36,"GTX 1650":20,"GTX 1660":26,"GTX 1660 Super":28,"GTX 1660 Ti":29,
+"RTX 2060":35,"RTX 2060 Super":38,"RTX 2070":40,"RTX 2070 Super":44,"RTX 2080":46,"RTX 2080 Super":49,"RTX 2080 Ti":54,
+"RTX 3050":32,"RTX 3060":42,"RTX 3060 Ti":50,"RTX 3070":58,"RTX 3070 Ti":62,"RTX 3080":72,"RTX 3080 Ti":78,"RTX 3090":82,"RTX 3090 Ti":84,
+"RTX 4060":48,"RTX 4060 Ti":55,"RTX 4070":68,"RTX 4070 Super":72,"RTX 4070 Ti":76,"RTX 4070 Ti Super":80,"RTX 4080":88,"RTX 4080 Super":90,"RTX 4090":100,"RTX 5070":86,"RTX 5070 Ti":95,"RTX 5080":110,"RTX 5090":128,
+"RX 570":18,"RX 580":20,"RX 590":22,"RX 5500 XT":30,"RX 5600 XT":38,"RX 5700":41,"RX 5700 XT":45,
+"RX 6500 XT":26,"RX 6600":40,"RX 6600 XT":45,"RX 6650 XT":47,"RX 6700 XT":55,"RX 6750 XT":58,
+"RX 6800":65,"RX 6800 XT":72,"RX 6900 XT":78,"RX 6950 XT":80,"RX 7600":44,"RX 7600 XT":47,"RX 7700 XT":62,"RX 7800 XT":70,"RX 7900 GRE":75,"RX 7900 XT":85,"RX 7900 XTX":92,
+"Arc A580":37,"Arc A750":38,"Arc A770":42,"Arc B580":52,
+"GTX 1050":13,"GTX 1630":12,"RTX 3050 Ti":34,"RX 6400":22,"RX 7700":58,"AMD Radeon 780M (iGPU)":9,"Intel UHD 770 (iGPU)":5,
+"GTX 650":8,"GTX 750":10,"GTX 750 Ti":11,"GTX 950":13,"RX 460":16,"RX 470":19,"RX 480":21,"RTX 5060":58,"RTX 5060 Ti":64,
+"Intel Iris Xe (Laptop)":6,"MX550 (Laptop)":10,"RTX 2060 (Laptop)":30,"RTX 2070 (Laptop)":34,"RTX 3050 (Laptop)":24,"RTX 3060 (Laptop)":32,
+"RTX 3070 (Laptop)":40,"RTX 3070 Ti (Laptop)":44,"RTX 3080 (Laptop)":48,"RTX 3080 Ti (Laptop)":52,
+"RTX 4050 (Laptop)":28,"RTX 4060 (Laptop)":38,"RTX 4070 (Laptop)":50,"RTX 4080 (Laptop)":62,"RTX 4090 (Laptop)":70,
+"RX 6800M (Laptop)":50,"RX 7600S (Laptop)":36,"RX 7900M (Laptop)":66,
+"RTX 5050 (Laptop)":34,"RTX 5060 (Laptop)":46,"RTX 5070 (Laptop)":54,"RTX 5070 Ti (Laptop)":66,"RTX 5080 (Laptop)":76,"RTX 5090 (Laptop)":90,
+"RTX 3050 Ti (Laptop)":27,"GTX 1650 (Laptop)":16,"GTX 1660 Ti (Laptop)":25,"GTX 1060 (Laptop)":19,"RX 7700S (Laptop)":40,"Radeon 890M (Laptop iGPU)":12,
+"RX 9070 XT":90,"RX 9070":82,"RX 9060 XT":60,"RX 9060":53,"Arc A370M (Laptop)":17,"Arc A550M (Laptop)":22,"Arc A730M (Laptop)":30,
+"GTX 280":9,"GTX 285":10,"GTX 480":16,"GTX 580":19,"GTX 670":24,"GTX 680":25,"GTX 690":33,"GTX 780":28,"GTX 780 Ti":31,
+"GTX 970":27,"GTX 980":33,"GTX 980 Ti":37,"TITAN X (Maxwell)":38,"TITAN Xp":45,"TITAN RTX":66,"GT 1030":7,"GT 730":5,
+"HD 6970":12,"HD 7870":17,"HD 7950":19,"HD 7970":21,"R9 270":18,"R9 280":20,"R9 280X":23,"R9 290":27,"R9 290X":29,
+"R9 380":21,"R9 390":30,"R9 390X":32,"R9 Fury":36,"R9 Fury X":38,"RX Vega 56":41,"RX Vega 64":44,"RX 5300":24,
+"GTX 980M (Laptop)":22,"GTX 970M (Laptop)":19,"GTX 1050 Ti (Laptop)":17,"GTX 1050 (Laptop)":15,"RTX 2070 Super (Laptop)":36,
+"RTX 2080 (Laptop)":38,"RTX 2080 Super (Laptop)":42,"MX450 (Laptop)":11,"MX350 (Laptop)":9,"MX250 (Laptop)":8,"MX130 (Laptop)":5,
+"RX 6500M (Laptop)":26,"RX 6600M (Laptop)":37,"RX Vega 8 (Laptop iGPU)":7,"RX Vega 10 (Laptop iGPU)":8,
+"Intel Iris Plus (Laptop)":5,"Intel UHD 620 (Laptop)":4,"Radeon 760M (Laptop iGPU)":10,"Radeon 740M (Laptop iGPU)":8};
+const CPU = {"Pentium G4560":16,"Intel i3-8100":22,"Intel i3-10100":25,"Intel i3-12100":36,"Intel i3-13100":40,"Intel i5-6600K":29,"Intel i5-7600K":30,"Intel i5-8400":34,"Intel i5-9400":32,"Intel i5-10400":38,"Intel i5-11400":45,"Intel i5-12400":55,
+"Intel i5-13400":62,"Intel i5-13600K":75,"Intel i5-14600K":78,"Intel i7-6700K":37,"Intel i7-7700K":40,"Intel i7-8700K":46,"Intel i7-9700K":48,"Intel i7-10700K":55,"Intel i7-11700K":60,"Intel i7-12700K":72,
+"Intel i7-13700K":80,"Intel i7-14700K":84,"Intel i9-11900K":65,"Intel i9-12900K":85,"Intel i9-13900K":95,"Intel i9-13900KS":97,"Intel i9-14900K":97,"Intel i9-14900KS":99,"Intel Core Ultra 7 265K":92,"Intel Core Ultra 9 285K":99,
+"AMD FX-8350":15,"Ryzen 3 1200":20,"Ryzen 3 3100":28,"Ryzen 3 4100":33,"Ryzen 5 1600":29,"Ryzen 5 2600":30,"Ryzen 5 4600G":41,
+"Ryzen 5 3600":42,"Ryzen 5 5600":58,"Ryzen 5 5600X":60,"Ryzen 5 7600":70,"Ryzen 5 7600X":72,"Ryzen 5 9600X":80,"Ryzen 7 2700X":38,"Ryzen 7 3700X":55,"Ryzen 7 5800X":68,
+"Ryzen 7 5800X3D":78,"Ryzen 7 7700X":82,"Ryzen 7 7800X3D":92,"Ryzen 7 9700X":88,"Ryzen 9 3900X":70,"Ryzen 9 5900X":75,"Ryzen 9 5950X":80,"Ryzen 9 7900X":90,"Ryzen 9 7900X3D":93,"Ryzen 9 7950X":98,"Ryzen 9 7950X3D":99,"Ryzen 9 9900X":94,"Ryzen 9 9950X":100,"Ryzen 9 9950X3D":102,
+"Intel Pentium Gold G6400":18,
+"Intel i3-14100":42,"Intel i5-12600K":66,"Intel i5-14400":64,"Intel i5-14500":68,"Intel i7-14700":82,"Intel i9-14900":92,"Intel Core Ultra 5 245K":84,"Intel Core Ultra 7 265KF":92,
+"Intel i5-4690K":22,"Intel i7-2600K":22,"Intel i7-4790K":34,"Intel i5-6500":26,"Intel i7-6700":35,"Intel i5-9600K":44,
+"Ryzen 5 1600X":31,"Ryzen 3 3300X":40,"Ryzen 5 3400G":30,"Ryzen 5 5500":52,"Ryzen 5 5600G":54,"Ryzen 7 5700X":66,"Ryzen 7 5700X3D":76,"Ryzen 5 7500F":68,"Ryzen 7 9800X3D":100,"Ryzen 9 9900X3D":100,
+"Intel Core 2 Duo E8400":9,"Intel Core 2 Quad Q6600":11,"Pentium 4 3.0GHz":4,"Pentium D 3.0GHz":5,"Celeron G3900":14,
+"Intel i3-2100":16,"Intel i5-2400":18,"Intel i7-3770K":24,"Intel i5-3570K":21,"Intel i7-4770":31,"Intel i5-4460":20,"Intel i3-4130":15,
+"AMD Phenom II X4 965":14,"Athlon II X4 640":10,"Athlon X4 860K":17,"AMD FX-6300":17,"AMD FX-8150":19,"AMD FX-9590":24,
+"A10-7850K APU":15,"Ryzen 3 1300X":25,"Ryzen 3 2200G":24,"Ryzen 5 2400G":27,"Ryzen 3 3200G":26,
+"Ryzen Threadripper 1950X":62,"Ryzen Threadripper 2990WX":64,"Ryzen Threadripper 3970X":88,
+"AMD Z1 Extreme (Handheld)":46,"AMD Z1 (Handheld)":34,"Intel i5-13420H (Laptop)":48,
+"Intel Core Ultra 7 155H (Laptop)":62,"Intel Core Ultra 9 185H (Laptop)":68,"Intel Core Ultra 9 275HX (Laptop)":88,"Intel i5-12450H (Laptop)":46,"Intel i7-12650H (Laptop)":56,"Intel i7-13650HX (Laptop)":74,
+"Ryzen 5 7640HS (Laptop)":62,"Ryzen 7 8845HS (Laptop)":72,"Ryzen 9 7945HX (Laptop)":88,"Ryzen 9 7945HX3D (Laptop)":92,"Ryzen 9 9955HX (Laptop)":92,"Ryzen AI 9 HX 370 (Laptop)":76,
+"Apple M1 (Laptop)":40,"Apple M1 Pro (Laptop)":52,"Apple M3 (Laptop)":52,"Apple M3 Max (Laptop)":72,"Apple M4 (Laptop)":62,"Apple M4 Max (Laptop)":86,"Ryzen 5 4500":36,"Ryzen 5 4600G":41,
+"Intel i5-1135G7 (Laptop)":26,"Intel i5-11400H (Laptop)":40,"Intel i5-12500H (Laptop)":50,"Intel i5-13500H (Laptop)":56,
+"Intel i7-11800H (Laptop)":48,"Intel i7-12700H (Laptop)":58,"Intel i7-13700H (Laptop)":66,"Intel i9-13900HX (Laptop)":80,"Intel i9-14900HX (Laptop)":84,
+"Intel i3-1115G4 (Laptop)":20,"Intel i3-1215U (Laptop)":30,"Intel i3-13100 (Laptop variant)":40,
+"Ryzen 3 5300U (Laptop)":24,"Ryzen 3 7320U (Laptop)":27,
+"Ryzen 5 5600H (Laptop)":42,"Ryzen 7 5800H (Laptop)":52,"Ryzen 7 6800H (Laptop)":58,"Ryzen 7 7840HS (Laptop)":68,
+"Ryzen 9 7940HS (Laptop)":74,"Ryzen 9 8945HS (Laptop)":78,"Apple M2 (Laptop)":44,"Apple M3 Pro (Laptop)":64,"Apple M4 Pro (Laptop)":76};
+
+// refFPS: FPS at score-50 GPU / score-50 CPU, 1080p, High. cpuWeight: how CPU-bound the title is (0-1)
+const GAMES = [
+ {id:"valorant", name:"Valorant", genre:"Tactical Shooter", year:2020, grad:["#ff4655","#0f1923"], icon:"🎯",
+  min:{gpu:"GTX 1050 Ti",cpu:"Intel i3-4150",ram:4,storage:"25 GB"}, rec:{gpu:"GTX 1650",cpu:"Intel i5-9400F",ram:8,storage:"25 GB"},
+  refFPS:220, cpuWeight:0.55, minScore:15, recScore:20},
+ {id:"cs2", name:"Counter-Strike 2", genre:"Tactical Shooter", year:2023, grad:["#f2a900","#1b1b1b"], icon:"🔫",
+  min:{gpu:"GTX 960",cpu:"Intel i5-3470",ram:8,storage:"85 GB"}, rec:{gpu:"GTX 1060",cpu:"Intel i5-9600K",ram:8,storage:"85 GB"},
+  refFPS:180, cpuWeight:0.6, minScore:16, recScore:26},
+ {id:"minecraft", name:"Minecraft", genre:"Sandbox", year:2011, grad:["#5c9c3d","#1b2e1a"], icon:"⛏️",
+  min:{gpu:"Intel HD 4000",cpu:"Intel i3-3210",ram:4,storage:"4 GB"}, rec:{gpu:"GTX 700 Series",cpu:"Intel i5-4690",ram:8,storage:"4 GB"},
+  refFPS:200, cpuWeight:0.5, minScore:8, recScore:22},
+ {id:"fortnite", name:"Fortnite", genre:"Battle Royale", year:2017, grad:["#9d4dff","#1a1030"], icon:"🪂",
+  min:{gpu:"Intel HD 4000",cpu:"Intel i3-3225",ram:4,storage:"30 GB"}, rec:{gpu:"GTX 960",cpu:"Intel i5-7300U",ram:8,storage:"30 GB"},
+  refFPS:130, cpuWeight:0.5, minScore:10, recScore:26},
+ {id:"cp2077", name:"Cyberpunk 2077", genre:"Action RPG", year:2020, grad:["#f2e94e","#0d0d0d"], icon:"🌆",
+  min:{gpu:"GTX 1060",cpu:"Intel i5-3570K",ram:8,storage:"70 GB"}, rec:{gpu:"RTX 2060 Super",cpu:"Intel i7-6700",ram:12,storage:"70 GB"},
+  refFPS:70, cpuWeight:0.35, minScore:26, recScore:52},
+ {id:"gtav", name:"Grand Theft Auto V", genre:"Open World", year:2015, grad:["#2ee6a8","#0a1a17"], icon:"🚗",
+  min:{gpu:"GTX 660",cpu:"Intel i5-3470",ram:4,storage:"95 GB"}, rec:{gpu:"GTX 1630",cpu:"Intel i5-3470",ram:8,storage:"95 GB"},
+  refFPS:150, cpuWeight:0.4, minScore:14, recScore:20},
+ {id:"rdr2", name:"Red Dead Redemption 2", genre:"Open World", year:2019, grad:["#c9704f","#241512"], icon:"🤠",
+  min:{gpu:"GTX 770",cpu:"Intel i5-2500K",ram:8,storage:"150 GB"}, rec:{gpu:"GTX 1060",cpu:"Intel i7-4770K",ram:12,storage:"150 GB"},
+  refFPS:85, cpuWeight:0.4, minScore:20, recScore:35},
+ {id:"wukong", name:"Black Myth: Wukong", genre:"Action RPG", year:2024, grad:["#d4af37","#150f05"], icon:"🐒",
+  min:{gpu:"GTX 1060",cpu:"Intel i5-8400",ram:16,storage:"130 GB"}, rec:{gpu:"RTX 3060",cpu:"Intel i7-9700",ram:16,storage:"130 GB"},
+  refFPS:48, cpuWeight:0.3, minScore:28, recScore:42},
+ {id:"ark", name:"ARK: Survival Ascended", genre:"Survival", year:2023, grad:["#5ec9e6","#0a1620"], icon:"🦖",
+  min:{gpu:"GTX 1080",cpu:"Intel i7-8700",ram:16,storage:"90 GB"}, rec:{gpu:"RTX 3080",cpu:"Ryzen 9 5900X",ram:16,storage:"90 GB"},
+  refFPS:45, cpuWeight:0.35, minScore:32, recScore:72},
+ {id:"codmw3", name:"Call of Duty: MW III", genre:"FPS", year:2023, grad:["#8a8a8a","#141414"], icon:"🪖",
+  min:{gpu:"GTX 960",cpu:"Intel i3-4340",ram:8,storage:"125 GB"}, rec:{gpu:"RTX 2070",cpu:"Intel i7-4770K",ram:16,storage:"125 GB"},
+  refFPS:100, cpuWeight:0.4, minScore:16, recScore:46},
+ {id:"apex", name:"Apex Legends", genre:"Battle Royale", year:2019, grad:["#da2c38","#161616"], icon:"🚀",
+  min:{gpu:"GTX 640",cpu:"Intel i3-6300",ram:6,storage:"75 GB"}, rec:{gpu:"GTX 970",cpu:"Intel i5-3570K",ram:8,storage:"75 GB"},
+  refFPS:140, cpuWeight:0.5, minScore:10, recScore:24},
+ {id:"ow2", name:"Overwatch 2", genre:"Hero Shooter", year:2022, grad:["#f99e1a","#0d1b2a"], icon:"🦸",
+  min:{gpu:"GTX 600",cpu:"Intel i3",ram:6,storage:"50 GB"}, rec:{gpu:"GTX 1060",cpu:"Intel i5",ram:8,storage:"50 GB"},
+  refFPS:200, cpuWeight:0.5, minScore:8, recScore:22},
+ {id:"lol", name:"League of Legends", genre:"MOBA", year:2009, grad:["#c8aa6e","#0a1428"], icon:"⚔️",
+  min:{gpu:"GTX 560",cpu:"Intel i3-530",ram:2,storage:"16 GB"}, rec:{gpu:"GTX 650",cpu:"Intel i5-3300",ram:4,storage:"16 GB"},
+  refFPS:260, cpuWeight:0.45, minScore:6, recScore:14},
+ {id:"dota2", name:"Dota 2", genre:"MOBA", year:2013, grad:["#a4302a","#1a1410"], icon:"🛡️",
+  min:{gpu:"GTX 650",cpu:"Dual Core 2.8GHz",ram:4,storage:"60 GB"}, rec:{gpu:"GTX 960",cpu:"Intel i5-4460",ram:8,storage:"60 GB"},
+  refFPS:220, cpuWeight:0.45, minScore:9, recScore:20},
+ {id:"pubg", name:"PUBG: Battlegrounds", genre:"Battle Royale", year:2017, grad:["#f2a900","#101820"], icon:"🪖",
+  min:{gpu:"GTX 960",cpu:"Intel i5-4430",ram:8,storage:"60 GB"}, rec:{gpu:"GTX 1060",cpu:"Intel i5-6600K",ram:16,storage:"60 GB"},
+  refFPS:95, cpuWeight:0.45, minScore:16, recScore:26},
+ {id:"eldenring", name:"Elden Ring", genre:"Action RPG", year:2022, grad:["#c9a24b","#1b1508"], icon:"🗡️",
+  min:{gpu:"GTX 1060",cpu:"Intel i5-8400",ram:12,storage:"60 GB"}, rec:{gpu:"GTX 1070",cpu:"Intel i7-8700K",ram:16,storage:"60 GB"},
+  refFPS:75, cpuWeight:0.35, minScore:22, recScore:29},
+ {id:"hogwarts", name:"Hogwarts Legacy", genre:"Action RPG", year:2023, grad:["#7f0909","#140d05"], icon:"🪄",
+  min:{gpu:"GTX 960",cpu:"Intel i5-8400",ram:16,storage:"85 GB"}, rec:{gpu:"RTX 3060",cpu:"Intel i7-8700",ram:16,storage:"85 GB"},
+  refFPS:60, cpuWeight:0.3, minScore:16, recScore:42},
+ {id:"gow", name:"God of War", genre:"Action Adventure", year:2022, grad:["#8b1a1a","#0c0c0c"], icon:"🪓",
+  min:{gpu:"GTX 960",cpu:"Intel i5-2500K",ram:8,storage:"70 GB"}, rec:{gpu:"RTX 2060",cpu:"Intel i7-3770K",ram:16,storage:"70 GB"},
+  refFPS:80, cpuWeight:0.32, minScore:16, recScore:35},
+ {id:"bg3", name:"Baldur's Gate 3", genre:"RPG", year:2023, grad:["#d4573b","#160d0a"], icon:"🎲",
+  min:{gpu:"GTX 970",cpu:"Intel i5-4690",ram:8,storage:"150 GB"}, rec:{gpu:"RTX 2060 Super",cpu:"Intel i7-8700K",ram:16,storage:"150 GB"},
+  refFPS:70, cpuWeight:0.4, minScore:24, recScore:38},
+ {id:"starfield", name:"Starfield", genre:"Action RPG", year:2023, grad:["#3d6e9c","#0a0f18"], icon:"🚀",
+  min:{gpu:"GTX 1070 Ti",cpu:"Intel i7-6800K",ram:16,storage:"125 GB"}, rec:{gpu:"RTX 2080",cpu:"Intel i5-10600K",ram:16,storage:"125 GB"},
+  refFPS:55, cpuWeight:0.35, minScore:29, recScore:46},
+ {id:"witcher3", name:"The Witcher 3", genre:"Action RPG", year:2015, grad:["#8a1f1f","#120d0d"], icon:"🐺",
+  min:{gpu:"GTX 660",cpu:"Intel i5-2500K",ram:6,storage:"50 GB"}, rec:{gpu:"GTX 770",cpu:"Intel i7-3770",ram:8,storage:"50 GB"},
+  refFPS:110, cpuWeight:0.3, minScore:14, recScore:20},
+ {id:"forza5", name:"Forza Horizon 5", genre:"Racing", year:2021, grad:["#ff7a00","#101820"], icon:"🏎️",
+  min:{gpu:"GTX 970",cpu:"Intel i5-4460",ram:8,storage:"110 GB"}, rec:{gpu:"GTX 1070",cpu:"Intel i5-8400",ram:16,storage:"110 GB"},
+  refFPS:100, cpuWeight:0.35, minScore:20, recScore:29},
+ {id:"r6siege", name:"Rainbow Six Siege", genre:"Tactical Shooter", year:2015, grad:["#3f5c6e","#0c1216"], icon:"🎯",
+  min:{gpu:"GTX 460",cpu:"Intel i3-560",ram:6,storage:"85 GB"}, rec:{gpu:"GTX 670",cpu:"Intel i5-2500K",ram:8,storage:"85 GB"},
+  refFPS:230, cpuWeight:0.5, minScore:7, recScore:15},
+ {id:"destiny2", name:"Destiny 2", genre:"Looter Shooter", year:2017, grad:["#3ea1c9","#0a1522"], icon:"🌌",
+  min:{gpu:"GTX 660",cpu:"Intel i3-3250",ram:6,storage:"105 GB"}, rec:{gpu:"GTX 970",cpu:"Intel i5-2400",ram:8,storage:"105 GB"},
+  refFPS:130, cpuWeight:0.4, minScore:14, recScore:24},
+ {id:"diablo4", name:"Diablo IV", genre:"Action RPG", year:2023, grad:["#8b0000","#0d0505"], icon:"😈",
+  min:{gpu:"GTX 970",cpu:"Intel i5-2500K",ram:8,storage:"90 GB"}, rec:{gpu:"RTX 2060 Super",cpu:"Intel i5-10600",ram:16,storage:"90 GB"},
+  refFPS:90, cpuWeight:0.35, minScore:24, recScore:38},
+ {id:"palworld", name:"Palworld", genre:"Survival", year:2024, grad:["#6bbf59","#0c1610"], icon:"🐾",
+  min:{gpu:"GTX 1050 Ti",cpu:"Intel i5-3570K",ram:8,storage:"40 GB"}, rec:{gpu:"RTX 2070",cpu:"Intel i7-9700K",ram:16,storage:"40 GB"},
+  refFPS:65, cpuWeight:0.4, minScore:15, recScore:40},
+ {id:"helldivers2", name:"Helldivers 2", genre:"Co-op Shooter", year:2024, grad:["#ffcc00","#101010"], icon:"🪖",
+  min:{gpu:"GTX 1050 Ti",cpu:"Intel i7-4790K",ram:8,storage:"100 GB"}, rec:{gpu:"RTX 2060",cpu:"Intel i7-9700K",ram:16,storage:"100 GB"},
+  refFPS:75, cpuWeight:0.4, minScore:15, recScore:35},
+ {id:"stardew", name:"Stardew Valley", genre:"Farming Sim", year:2016, grad:["#7fb069","#12180e"], icon:"🌾",
+  min:{gpu:"Intel HD 4000",cpu:"2 GHz Dual Core",ram:2,storage:"1 GB"}, rec:{gpu:"GTX 650",cpu:"Intel i3",ram:4,storage:"1 GB"},
+  refFPS:300, cpuWeight:0.5, minScore:5, recScore:10},
+ {id:"hollowknight", name:"Hollow Knight", genre:"Metroidvania", year:2017, grad:["#4a5a6a","#0a0c10"], icon:"🐞",
+  min:{gpu:"GTX 650",cpu:"Intel i3-2100",ram:4,storage:"9 GB"}, rec:{gpu:"GTX 750 Ti",cpu:"Intel i5-2300",ram:4,storage:"9 GB"},
+  refFPS:300, cpuWeight:0.35, minScore:5, recScore:11},
+ {id:"silksong", name:"Hollow Knight: Silksong", genre:"Metroidvania", year:2025, grad:["#8a3f6b","#100a14"], icon:"🕷️",
+  min:{gpu:"GTX 950",cpu:"Intel i3-3220",ram:6,storage:"13 GB"}, rec:{gpu:"GTX 1060",cpu:"Intel i5-6400",ram:8,storage:"13 GB"},
+  refFPS:220, cpuWeight:0.4, minScore:11, recScore:22},
+ {id:"terraria", name:"Terraria", genre:"Sandbox", year:2011, grad:["#5dbf6d","#0d160f"], icon:"⛏️",
+  min:{gpu:"GeForce 8000 series",cpu:"2.0 GHz Dual Core",ram:2,storage:"600 MB"}, rec:{gpu:"GTX 650",cpu:"Intel i3",ram:4,storage:"600 MB"},
+  refFPS:300, cpuWeight:0.45, minScore:5, recScore:10},
+ {id:"amongus", name:"Among Us", genre:"Party", year:2018, grad:["#c51111","#101010"], icon:"👨‍🚀",
+  min:{gpu:"Intel HD Graphics",cpu:"Dual Core 1.8GHz",ram:2,storage:"250 MB"}, rec:{gpu:"Intel HD 620",cpu:"Intel i3",ram:4,storage:"250 MB"},
+  refFPS:300, cpuWeight:0.3, minScore:4, recScore:8},
+ {id:"rocketleague", name:"Rocket League", genre:"Sports", year:2015, grad:["#2f6fd4","#0a1220"], icon:"⚽",
+  min:{gpu:"GTX 260",cpu:"Intel i3-560",ram:4,storage:"20 GB"}, rec:{gpu:"GTX 660",cpu:"Intel i5-2500K",ram:8,storage:"20 GB"},
+  refFPS:250, cpuWeight:0.45, minScore:8, recScore:15},
+ {id:"seaofthieves", name:"Sea of Thieves", genre:"Adventure", year:2018, grad:["#2a8a8a","#081414"], icon:"🏴‍☠️",
+  min:{gpu:"GTX 650 Ti",cpu:"Intel i3-4150",ram:4,storage:"60 GB"}, rec:{gpu:"GTX 1060",cpu:"Intel i5-6600",ram:8,storage:"60 GB"},
+  refFPS:130, cpuWeight:0.35, minScore:12, recScore:26},
+ {id:"tarkov", name:"Escape from Tarkov", genre:"Extraction Shooter", year:2017, grad:["#6b5b3d","#101008"], icon:"🎒",
+  min:{gpu:"GTX 970",cpu:"Intel i5-9600K",ram:12,storage:"90 GB"}, rec:{gpu:"RTX 3060",cpu:"Intel i7-10700K",ram:16,storage:"90 GB"},
+  refFPS:60, cpuWeight:0.55, minScore:24, recScore:42},
+ {id:"it2", name:"It Takes Two", genre:"Co-op Adventure", year:2021, grad:["#e0693a","#160c08"], icon:"🤝",
+  min:{gpu:"GTX 960",cpu:"Intel i3-2130",ram:6,storage:"50 GB"}, rec:{gpu:"GTX 1060",cpu:"Intel i5-4690",ram:8,storage:"50 GB"},
+  refFPS:140, cpuWeight:0.3, minScore:16, recScore:26},
+ {id:"naruto", name:"Naruto X Boruto: Ninja Voltage", genre:"Action / Fighting", year:2018, grad:["#ff8c1a","#101418"], icon:"🥷",
+  min:{gpu:"Intel HD 4000 (or Android GPU)",cpu:"Intel i3 / Snapdragon 625",ram:3,storage:"2 GB"}, rec:{gpu:"GTX 750 Ti (or Adreno 630)",cpu:"Intel i5 / Snapdragon 845",ram:4,storage:"2 GB"},
+  refFPS:220, cpuWeight:0.3, minScore:6, recScore:11},
+];
+
+// ---- Extra games: [name, genre, year, icon, minGPU, recGPU, minScore, recScore, minRAM, recRAM, GB, refFPS, cpuWeight]
+const EXTRA = [
+["Fallout 4","Action RPG",2015,"☢️","GTX 550 Ti","GTX 780",8,19,8,8,30,110,0.4],
+["Skyrim Special Edition","Action RPG",2016,"🐉","GTX 470","GTX 660",8,14,8,8,12,140,0.4],
+["Cities: Skylines","City Builder",2015,"🏙️","GTX 260","GTX 480",6,12,4,6,4,120,0.7],
+["Cities: Skylines II","City Builder",2023,"🌇","GTX 1660","RTX 3080",26,72,16,32,60,45,0.7],
+["Civilization VI","Strategy",2016,"🏛️","Intel HD 530","GTX 1050",6,13,4,8,12,140,0.6],
+["Total War: Warhammer III","Strategy",2022,"🪓","GTX 1050","RTX 2060",13,35,8,16,140,70,0.6],
+["Age of Empires IV","Strategy",2021,"🏰","GTX 1050","GTX 1660",13,26,8,16,50,110,0.5],
+["StarCraft II","Strategy",2010,"👾","GTX 650","GTX 1050",8,13,4,8,30,180,0.5],
+["Warframe","Looter Shooter",2013,"🤖","GTX 460","GTX 1060",8,22,4,8,60,140,0.45],
+["Path of Exile","Action RPG",2013,"💀","GTX 650 Ti","GTX 1060",9,22,8,16,40,130,0.5],
+["Path of Exile 2","Action RPG",2024,"🔮","GTX 1060","RTX 3060",22,42,12,16,100,80,0.45],
+["Lost Ark","MMORPG",2022,"⚓","GTX 460","GTX 1060",8,22,8,16,50,110,0.4],
+["Genshin Impact","Open World RPG",2020,"🌸","GTX 1030","GTX 1060",13,22,8,16,30,120,0.3],
+["Honkai: Star Rail","RPG",2023,"🚂","GTX 1060","GTX 1660",22,26,8,16,20,110,0.3],
+["Wuthering Waves","Action RPG",2024,"🌊","GTX 1060","GTX 1660 Ti",22,29,8,16,30,100,0.35],
+["Zenless Zone Zero","Action RPG",2024,"📺","GTX 1060","RTX 2060",22,35,8,16,50,110,0.3],
+["Dead by Daylight","Horror",2016,"🔪","GTX 760","GTX 1060",10,22,8,16,50,140,0.4],
+["Phasmophobia","Horror",2020,"👻","GTX 960","GTX 1060",16,22,8,16,21,110,0.3],
+["Lethal Company","Horror",2023,"🏭","GTX 750","GTX 1060",10,22,4,8,1,140,0.3],
+["Valheim","Survival",2021,"🛶","GTX 500","GTX 1060",9,22,8,16,1,90,0.5],
+["Rust","Survival",2018,"🛢️","GTX 670","GTX 1060",13,22,10,16,25,90,0.55],
+["7 Days to Die","Survival",2013,"🧟","GTX 760","GTX 1060",13,22,12,16,15,100,0.5],
+["The Forest","Survival",2018,"🌲","GTX 560","GTX 970",8,24,4,8,5,100,0.4],
+["Sons of the Forest","Survival",2024,"🌴","GTX 1060","RTX 2060",22,35,12,16,15,75,0.4],
+["Subnautica","Survival",2018,"🐠","GTX 670","GTX 1050",13,16,8,8,20,100,0.3],
+["No Man's Sky","Space Exploration",2016,"🪐","GTX 1060","RTX 2060",22,35,8,16,15,90,0.35],
+["Satisfactory","Factory Builder",2024,"🏗️","GTX 1060","RTX 2060",22,35,8,16,20,90,0.5],
+["Factorio","Factory Builder",2020,"⚙️","Intel HD 4000","GTX 650",6,8,4,8,3,300,0.8],
+["Cuphead","Platformer",2017,"🎺","GTX 650","GTX 1050",8,13,3,4,4,250,0.2],
+["Hades","Roguelike",2020,"🔥","GTX 950","GTX 1060",11,22,8,8,15,240,0.3],
+["Hades II","Roguelike",2025,"🌙","GTX 950","GTX 1060",11,22,8,8,15,220,0.3],
+["Celeste","Platformer",2018,"🏔️","Intel HD 4000","GTX 650",6,8,2,4,1,300,0.2],
+["Ori and the Will of the Wisps","Platformer",2020,"🦉","GTX 750 Ti","GTX 1060",11,22,8,8,20,200,0.25],
+["Dark Souls III","Action RPG",2016,"🕯️","GTX 750 Ti","GTX 1060",11,22,8,8,25,90,0.3],
+["Sekiro: Shadows Die Twice","Action Adventure",2019,"⛩️","GTX 760","GTX 970",13,24,8,8,25,85,0.3],
+["Lies of P","Action RPG",2023,"🎭","GTX 1650","RTX 2060",20,35,8,16,50,70,0.3],
+["Monster Hunter: World","Action RPG",2018,"🦎","GTX 1060","GTX 1070",22,26,8,16,48,75,0.35],
+["Monster Hunter Wilds","Action RPG",2025,"🐲","GTX 1660 Super","RTX 3060 Ti",28,50,16,16,75,50,0.35],
+["Resident Evil 4","Horror",2023,"🧬","GTX 1050 Ti","GTX 1070",15,26,8,16,60,90,0.3],
+["Resident Evil Village","Horror",2021,"🦇","GTX 1050 Ti","GTX 1070",15,26,8,16,30,100,0.3],
+["Silent Hill 2","Horror",2024,"🌫️","GTX 1060","RTX 2070",22,40,16,16,50,55,0.3],
+["Alan Wake 2","Horror",2023,"🔦","RTX 2060","RTX 3070",35,58,16,16,90,50,0.3],
+["Control","Action Adventure",2019,"🧠","GTX 780","GTX 1660",14,26,8,16,42,70,0.3],
+["Metro Exodus","FPS",2019,"☣️","GTX 670","GTX 1070",13,26,8,8,60,80,0.3],
+["Doom Eternal","FPS",2020,"👹","GTX 1060","RTX 2060",22,35,8,8,80,150,0.3],
+["DOOM: The Dark Ages","FPS",2025,"☠️","GTX 1660 Ti","RTX 3060 Ti",29,50,16,16,100,80,0.3],
+["Battlefield 2042","FPS",2021,"🛩️","GTX 1050 Ti","RTX 2060",15,35,8,16,100,90,0.5],
+["Battlefield V","FPS",2018,"🎖️","GTX 660","GTX 1060",13,22,8,12,50,110,0.45],
+["Call of Duty: Warzone","Battle Royale",2020,"💥","GTX 960","RTX 3060",16,42,8,16,125,100,0.45],
+["Call of Duty: Black Ops 6","FPS",2024,"🕶️","GTX 1060","RTX 3060",22,42,12,16,100,100,0.4],
+["Halo Infinite","FPS",2021,"👽","GTX 1050 Ti","RX 5700 XT",15,45,8,16,50,100,0.35],
+["Gears 5","Third-Person Shooter",2019,"🔧","GTX 760","GTX 1060",13,22,8,16,80,110,0.3],
+["Marvel Rivals","Hero Shooter",2024,"🕸️","GTX 1060","RTX 2060",22,35,16,16,70,110,0.4],
+["The Finals","FPS",2023,"🏆","GTX 1050 Ti","RTX 2060",15,35,12,16,70,110,0.45],
+["Delta Force","FPS",2024,"🚁","GTX 1050 Ti","GTX 1660",15,26,8,16,100,110,0.4],
+["Team Fortress 2","FPS",2007,"🎩","GTX 460","GTX 660",8,15,2,4,15,250,0.5],
+["Left 4 Dead 2","Co-op Shooter",2009,"🧟","GeForce 8800","GTX 650",5,8,2,4,13,300,0.4],
+["Half-Life: Alyx","VR Shooter",2020,"🥽","GTX 1060","RTX 2070",22,40,12,12,67,90,0.3],
+["Portal 2","Puzzle",2011,"🌀","GeForce 8800","GTX 650",5,8,2,4,12,300,0.3],
+["Marvel's Spider-Man Remastered","Action Adventure",2022,"🦸","GTX 950","GTX 1060",13,22,8,16,75,85,0.3],
+["Marvel's Spider-Man 2","Action Adventure",2025,"🌃","GTX 1650","RTX 3060",20,42,16,16,140,60,0.3],
+["Horizon Zero Dawn","Action RPG",2020,"🏹","GTX 950","GTX 1060",13,22,8,16,100,90,0.3],
+["Horizon Forbidden West","Action RPG",2024,"🌅","GTX 1650","RTX 2060",20,35,16,16,150,65,0.3],
+["The Last of Us Part I","Action Adventure",2023,"🍄","GTX 970","RTX 2070",24,40,16,16,100,55,0.3],
+["Ghost of Tsushima","Action Adventure",2024,"🎌","GTX 960","GTX 1060",16,22,8,16,75,80,0.3],
+["Assassin's Creed Valhalla","Action RPG",2020,"🪙","GTX 960","GTX 1080",16,32,8,16,50,75,0.4],
+["Assassin's Creed Mirage","Action Adventure",2023,"🏜️","GTX 1060","RTX 2070",22,40,8,16,40,80,0.4],
+["Assassin's Creed Shadows","Action RPG",2025,"🏯","GTX 1070","RTX 2070",26,40,16,16,115,55,0.4],
+["Far Cry 6","FPS",2021,"🐊","GTX 960","RTX 2060",16,35,8,16,60,90,0.4],
+["Watch Dogs: Legion","Action Adventure",2020,"🕵️","GTX 970","GTX 1070",24,26,8,16,45,80,0.4],
+["Star Wars Jedi: Survivor","Action Adventure",2023,"🤺","GTX 1070","RTX 2070",26,40,16,16,155,55,0.4],
+["Star Wars Outlaws","Action Adventure",2024,"🌠","GTX 1660 Super","RTX 3060 Ti",28,50,16,16,65,55,0.4],
+["Dragon's Dogma 2","Action RPG",2024,"🧙","GTX 1070","RTX 2080",26,46,12,16,60,50,0.55],
+["Final Fantasy VII Remake Intergrade","Action RPG",2021,"💠","GTX 780","GTX 1060",14,22,8,8,100,90,0.3],
+["Final Fantasy XIV","MMORPG",2013,"🪽","GTX 750","GTX 970",10,24,8,8,80,110,0.4],
+["Persona 3 Reload","JRPG",2024,"🎴","GTX 960","GTX 1660",16,26,8,16,30,120,0.3],
+["Stray","Adventure",2022,"🐈","GTX 1050","GTX 1660",13,26,8,16,10,110,0.3],
+["Sifu","Action",2022,"🥋","GTX 660","GTX 1060",13,22,8,16,20,110,0.3],
+["Death Stranding","Action Adventure",2020,"📦","GTX 1050","GTX 1060",13,22,8,8,80,95,0.3],
+["Kingdom Come: Deliverance II","Action RPG",2025,"🛡️","GTX 1060","RTX 2060",22,35,16,16,100,65,0.4],
+["Indiana Jones and the Great Circle","Action Adventure",2024,"🪃","RTX 2060","RTX 3070",35,58,16,32,120,65,0.3],
+["Avatar: Frontiers of Pandora","Action Adventure",2023,"🔵","GTX 1070","RTX 3070",26,58,16,16,90,50,0.4],
+["Hunt: Showdown 1896","Extraction Shooter",2019,"🩸","GTX 1060","GTX 1080",22,32,8,16,60,80,0.5],
+["EA Sports FC 25","Sports",2024,"🥅","GTX 1050 Ti","GTX 1660",15,26,8,12,100,140,0.4],
+["NBA 2K25","Sports",2024,"🏀","GTX 1050 Ti","GTX 1660",15,26,8,16,110,120,0.35],
+["F1 24","Racing",2024,"🏁","GTX 1060","RTX 2060",22,35,8,16,100,110,0.4],
+["Need for Speed Unbound","Racing",2022,"🚦","GTX 1050 Ti","GTX 1660 Ti",15,29,8,16,50,100,0.35],
+["Microsoft Flight Simulator 2024","Simulator",2024,"✈️","GTX 1070","RTX 2080",26,46,16,32,125,40,0.6],
+["Euro Truck Simulator 2","Simulator",2012,"🚚","GeForce 400","GTX 760",6,13,4,6,7,200,0.4],
+["Assetto Corsa Competizione","Racing",2019,"🚘","GTX 1050 Ti","GTX 1070",15,26,8,16,50,90,0.4],
+["Football Manager 2024","Sports Sim",2023,"📋","Intel UHD","GTX 1050 Ti",6,13,8,16,7,200,0.9],
+["Vampire Survivors","Roguelike",2022,"🧛","Intel HD 4000","GTX 650",6,8,2,4,1,300,0.3],
+["Balatro","Card Game",2024,"🃏","Intel HD 4000","GTX 650",6,8,4,4,1,300,0.2],
+["Slay the Spire","Card Game",2019,"🗼","Intel HD 4000","GTX 650",6,8,2,4,1,300,0.2],
+["Disco Elysium","RPG",2019,"🍸","Intel HD 4000","GTX 650",6,8,4,8,25,250,0.3],
+["Undertale","RPG",2015,"❤️","Intel HD 4000","Intel HD 4000",4,5,2,2,1,300,0.2],
+["Dave the Diver","Adventure",2023,"🤿","GTX 660","GTX 1050 Ti",13,15,4,8,10,250,0.25],
+["Hi-Fi Rush","Rhythm Action",2023,"🎸","GTX 1050 Ti","GTX 1660",15,26,8,16,30,140,0.3],
+["Roblox","Sandbox",2006,"🧱","Intel HD 4000","GTX 650",5,8,4,4,20,250,0.5],
+["Grounded","Survival",2022,"🐜","GTX 960","GTX 1060",16,22,8,16,30,100,0.4],
+["Fall Guys","Party",2020,"🫘","GTX 660","GTX 1060",13,22,8,8,8,200,0.3],
+["Ready or Not","Tactical Shooter",2023,"🚔","GTX 1060","RTX 2060",22,35,12,16,90,80,0.5],
+["Deep Rock Galactic","Co-op Shooter",2020,"⛏️","GTX 660","GTX 1060",13,22,8,8,10,140,0.4],
+["Dying Light 2","Action RPG",2022,"🧗","GTX 1050 Ti","RTX 2060",15,35,8,16,60,70,0.4],
+["The Sims 4","Life Sim",2014,"💎","Intel HD 4000","GTX 650",6,10,4,8,50,200,0.5],
+["Naruto Shippuden: Ultimate Ninja Storm 4","Fighting",2016,"🍥","GTX 660","GTX 960",13,16,4,8,20,180,0.25],
+["Naruto x Boruto: Ultimate Ninja Storm Connections","Fighting",2023,"🌀","GTX 960","GTX 1060",16,22,8,16,50,120,0.3]
+];
+const hx=(h,s,l)=>{l/=100;const a=s*Math.min(l,1-l)/100;const f=n=>{const k=(n+h/30)%12;return Math.round(255*(l-a*Math.max(Math.min(k-3,9-k,1),-1))).toString(16).padStart(2,'0')};return '#'+f(0)+f(8)+f(4)};
+const cpuLbl=s=>s<10?"Dual-core 2.5 GHz":s<20?"Intel i5-4460 / Ryzen 3 1200":s<32?"Intel i5-8400 / Ryzen 5 2600":s<50?"Intel i7-9700 / Ryzen 5 3600":"Intel i7-12700 / Ryzen 7 5800X";
+EXTRA.forEach(r=>{const [n,ge,y,ic,mg,rg,ms,rs,mr,rr,gb,fps,cw]=r;
+  const hue=Math.abs([...n].reduce((a,c)=>(a*31+c.charCodeAt(0))|0,7))%360;
+  GAMES.push({id:n.toLowerCase().replace(/[^a-z0-9]+/g,'-'),name:n,genre:ge,year:y,icon:ic,grad:[hx(hue,65,50),hx((hue+40)%360,45,10)],
+    min:{gpu:mg,cpu:cpuLbl(ms),ram:mr,storage:gb+" GB"},rec:{gpu:rg,cpu:cpuLbl(rs),ram:rr,storage:gb+" GB"},refFPS:fps,cpuWeight:cw,minScore:ms,recScore:rs});});
+
+// ---- 500 more games: [genre, tier, name, year]. Requirements are tier-based estimates (see tiers below).
+const TIERS={1:[6,12,4,8,5,260],2:[14,24,8,8,15,170],3:[22,38,8,16,40,110],4:[30,52,16,16,70,75],5:[40,68,16,32,100,55]};
+const desktopGpus=Object.keys(GPU).filter(k=>!/Laptop|iGPU|Integrated/.test(k)).sort((a,b)=>GPU[a]-GPU[b]);
+const nearGpu=sc=>desktopGpus.reduce((b,k)=>Math.abs(GPU[k]-sc)<Math.abs(GPU[b]-sc)?k:b,desktopGpus[0]);
+const MORE_GAMES=[["Survival and Crafting",3,"Barotrauma",2019],["Racing",2,"Hot Wheels Unleashed 2",2023],["Battle Royale and Multiplayer",2,"Dauntless",2019],["Action Adventure",4,"Ratchet & Clank: Rift Apart",2023],["Heavy AAA",4,"Grand Theft Auto: San Andreas",2005],["Shooter",4,"Deathloop",2021],["Souls-like and Hack and Slash",3,"Darksiders Genesis",2019],["Survival and Crafting",3,"Abiotic Factor",2024],["Shooter",3,"Gears of War: Ultimate Edition",2016],["Open World RPG",3,"Pillars of Eternity",2015],["Shooter",3,"Aliens: Fireteam Elite",2021],["Sports",2,"NBA 2K23",2022],["Survival and Crafting",3,"Smalland: Survive the Wilds",2023],["Shooter",3,"Arma 3",2013],["Shooter",3,"BioShock Infinite",2013],["Action Adventure",4,"Mafia: The Old Country",2025],["Action Adventure",4,"God of War Ragnarok",2024],["JRPG and Anime",3,"Octopath Traveler",2018],["Open World RPG",3,"Like a Dragon Gaiden",2023],["Strategy",2,"StarCraft Remastered",2017],["Narrative Adventure",2,"Detroit: Become Human",2019],["Cozy and Simulation",1,"Kerbal Space Program",2015],["Cozy and Simulation",1,"Moonlighter",2018],["Platformer",1,"Trine 4",2019],["Heavy AAA",4,"Total War: Empire",2009],["Cozy and Simulation",1,"Cooking Simulator",2019],["Heavy AAA",4,"Flight Simulator X",2006],["Open World RPG",3,"Greedfall II",2024],["Fighting",2,"Killer Instinct",2016],["Sports",2,"Out of the Park Baseball 25",2024],["Souls-like and Hack and Slash",3,"Victor Vran",2015],["Sim and Space",3,"Farthest Frontier",2022],["Sports",2,"NHL 24",2023],["Racing",2,"Wreckfest",2018],["Metroidvania",1,"Nine Sols",2024],["Heavy AAA",4,"The Last of Us Part II Remastered",2025],["Sim and Space",3,"Rebel Galaxy Outlaw",2019],["Sim and Space",3,"X4: Foundations",2018],["Fighting",2,"Demon Slayer: The Hinokami Chronicles",2021],["Heavy AAA",4,"Clair Obscur: Expedition 33",2025],["Heavy AAA",4,"Microsoft Flight Simulator",2020],["Platformer",1,"Axiom Verge",2015],["Cozy and Simulation",1,"Farming Simulator 22",2021],["Narrative Adventure",2,"Hellblade: Senua's Sacrifice",2017],["Cozy and Simulation",1,"Overcooked! All You Can Eat",2020],["Sim and Space",3,"IL-2 Sturmovik: Battle of Stalingrad",2013],["Strategy",2,"Mount and Blade II: Bannerlord",2022],["Sports",2,"Football Manager 2023",2022],["Fighting",2,"Brawlhalla",2017],["Strategy",2,"Phoenix Point",2019],["Horror",2,"Alien: Isolation",2014],["Fighting",2,"Jump Force",2019],["Sports",2,"PGA Tour 2K23",2023],["Strategy",2,"Songs of Conquest",2022],["Heavy AAA",4,"Metal Gear Solid Master Collection",2023],["Racing",2,"Test Drive Unlimited Solar Crown",2024],["Survival and Crafting",3,"The Long Dark",2017],["Battle Royale and Multiplayer",2,"Knockout City",2020],["Cozy and Simulation",1,"Wylde Flowers",2022],["Open World RPG",3,"Yakuza 0",2018],["Shooter",3,"Warhammer 40000: Darktide",2022],["Puzzle",1,"Infinifactory",2015],["Racing",2,"DiRT Rally 2.0",2019],["Platformer",1,"Limbo",2010],["Shooter",3,"S.T.A.L.K.E.R.: Shadow of Chernobyl",2007],["Horror",2,"Five Nights at Freddy's 2",2014],["Shooter",3,"Squad",2020],["Strategy",2,"Surviving Mars",2018],["Horror",2,"Scorn",2022],["Puzzle",1,"Portal Reloaded",2022],["Survival and Crafting",3,"Avorion",2020],["Shooter",3,"Sniper Elite 4",2017],["Shooter",3,"Prey",2017],["Open World RPG",3,"Vampyr",2018],["Survival and Crafting",3,"Don't Starve Together",2016],["Strategy",2,"Battle Brothers",2017],["JRPG and Anime",3,"Final Fantasy IX",2016],["Strategy",2,"Mount and Blade: Warband",2010],["Sports",2,"FIFA 22",2021],["Roguelike",1,"Enter the Gungeon",2016],["Action Adventure",3,"Marvel's Avengers",2020],["Souls-like and Hack and Slash",3,"Darksiders Warmastered Edition",2016],["JRPG and Anime",3,"Final Fantasy X/X-2 HD Remaster",2016],["Horror",4,"Cronos: The New Dawn",2025],["Action Adventure",3,"Assassin's Creed Brotherhood",2011],["Roguelike",1,"Darkest Dungeon",2016],["Heavy AAA",4,"Metal Gear Solid V: Ground Zeroes",2014],["Shooter",3,"Ghostrunner 2",2023],["Action Adventure",3,"Just Cause 4",2018],["Sim and Space",3,"Workers and Resources: Soviet Republic",2019],["Horror",2,"Iron Lung",2022],["Souls-like and Hack and Slash",3,"Hellpoint",2020],["Racing",2,"Need for Speed Payback",2017],["JRPG and Anime",3,"One Piece: World Seeker",2019],["Shooter",3,"Borderlands: The Pre-Sequel",2014],["JRPG and Anime",3,"Bleach: Brave Souls",2016],["Shooter",3,"Dead Island",2011],["Open World RPG",3,"Dragon Age II",2011],["Action Adventure",3,"Alone in the Dark",2024],["JRPG and Anime",3,"Persona 3 Portable",2023],["Shooter",3,"Star Wars Battlefront II",2017],["Puzzle",1,"The Witness",2016],["Open World RPG",3,"Yakuza Kiwami 2",2019],["Fighting",2,"Mortal Kombat 1",2023],["Survival and Crafting",3,"Soulmask",2024],["Action Adventure",3,"Shadow of the Tomb Raider",2018],["Shooter",3,"Call of Duty: Ghosts",2013],["Racing",2,"Nascar Heat 5",2020],["JRPG and Anime",3,"Ni no Kuni Wrath of the White Witch Remastered",2019],["Racing",2,"rFactor 2",2013],["Metroidvania",1,"Ender Lilies",2021],["Shooter",3,"Call of Duty: WWII",2017],["Horror",2,"Poppy Playtime: Chapter 2",2022],["Battle Royale and Multiplayer",2,"Quake Champions",2017],["Open World RPG",3,"The Witcher 2: Assassins of Kings",2011],["Shooter",3,"Half-Life",1998],["Survival and Crafting",3,"Scrap Mechanic",2016],["Horror",2,"Outlast",2013],["Strategy",2,"Age of Wonders 4",2023],["Souls-like and Hack and Slash",3,"Salt and Sacrifice",2022],["Sim and Space",3,"Captain of Industry",2022],["Battle Royale and Multiplayer",2,"Deadlock",2024],["Shooter",3,"Metal: Hellsinger",2022],["Souls-like and Hack and Slash",3,"Dynasty Warriors 9",2018],["Survival and Crafting",3,"Project Zomboid",2013],["Battle Royale and Multiplayer",2,"Splitgate 2",2025],["Open World RPG",3,"Torment: Tides of Numenera",2017],["Shooter",3,"Tiny Tina's Wonderlands",2022],["Racing",2,"Descenders",2019],["Survival and Crafting",3,"Longvinter",2022],["Horror",2,"Condemned: Criminal Origins",2006],["Shooter",3,"Shadow Warrior 2",2016],["Roguelike",1,"Brotato",2022],["Metroidvania",1,"Prince of Persia: The Lost Crown",2024],["Open World RPG",4,"Mass Effect Legendary Edition",2021],["Horror",2,"Resident Evil 4 Original",2007],["Souls-like and Hack and Slash",3,"Nioh 2",2021],["Fighting",2,"Naruto Shippuden: Ultimate Ninja Storm 3 Full Burst",2013],["Shooter",3,"Far Cry 4",2014],["Horror",2,"Amnesia: A Machine for Pigs",2013],["Strategy",2,"Total War: Rome II",2013],["Survival and Crafting",3,"Green Hell",2019],["Souls-like and Hack and Slash",3,"Torchlight II",2012],["Horror",2,"Five Nights at Freddy's",2014],["Horror",2,"Layers of Fear",2023],["Platformer",1,"Blasphemous 2",2023],["Sim and Space",3,"Airport CEO",2021],["Platformer",1,"Dead Cells",2018],["Survival and Crafting",3,"Subnautica: Below Zero",2021],["JRPG and Anime",3,"My Hero Ultra Rumble",2023],["Racing",2,"Need for Speed: Most Wanted",2012],["Cozy and Simulation",1,"A Short Hike",2019],["Survival and Crafting",3,"Empyrion: Galactic Survival",2020],["Action Adventure",3,"Assassin's Creed Origins",2017],["Action Adventure",3,"Sackboy: A Big Adventure",2022],["Horror",2,"Bendy and the Ink Machine",2017],["Souls-like and Hack and Slash",3,"Wolcen: Lords of Mayhem",2020],["Survival and Crafting",3,"Medieval Dynasty",2020],["Battle Royale and Multiplayer",2,"H1Z1",2016],["Battle Royale and Multiplayer",2,"Guild Wars 2",2012],["Souls-like and Hack and Slash",3,"Lords of the Fallen",2023],["Battle Royale and Multiplayer",2,"Paladins",2018],["Action Adventure",3,"Batman: Arkham Origins",2014],["Sports",2,"Skater XL",2020],["Racing",2,"Need for Speed Heat",2019],["Roguelike",1,"Rogue Legacy 2",2022],["Horror",2,"Resident Evil 5",2009],["Heavy AAA",4,"Metal Gear Solid V: The Phantom Pain",2015],["Open World RPG",3,"The Elder Scrolls III: Morrowind",2002],["Heavy AAA",4,"Grand Theft Auto III",2001],["Narrative Adventure",2,"Life is Strange: True Colors",2021],["Platformer",1,"Owlboy",2016],["Horror",2,"Resident Evil Revelations 2",2015],["Fighting",2,"Naruto Shippuden: Ultimate Ninja Storm Revolution",2015],["Racing",2,"Live for Speed",2003],["Survival and Crafting",3,"SCUM",2018],["Battle Royale and Multiplayer",2,"Halo: The Master Chief Collection",2019],["Racing",2,"Redout 2",2022],["Puzzle",1,"Placid Plastic Duck Simulator",2019],["Racing",2,"F1 23",2023],["Cozy and Simulation",1,"Littlewood",2019],["Racing",2,"Distance",2018],["Shooter",3,"Call of Duty: Infinite Warfare",2016],["Strategy",2,"Dune: Spice Wars",2022],["Sim and Space",3,"X Rebirth",2013],["Horror",2,"Resident Evil 6",2013],["Shooter",3,"Far Cry 2",2008],["Sports",2,"EA Sports FC 24",2023],["Survival and Crafting",3,"V Rising",2022],["Action Adventure",3,"Hitman",2016],["Puzzle",1,"Cocoon",2023],["Sim and Space",3,"Mindustry",2019],["Souls-like and Hack and Slash",3,"Ashen",2018],["Shooter",3,"Gears of War: Reloaded",2025],["Shooter",3,"Sniper Elite 5",2022],["Sim and Space",3,"Farming Simulator 25",2024],["Platformer",1,"Ori and the Blind Forest",2015],["Sports",2,"NBA 2K24",2023],["Horror",2,"The Medium",2021],["Roguelike",1,"Griftlands",2021],["Fighting",2,"BlazBlue: Cross Tag Battle",2019],["Sports",2,"eFootball 2024",2023],["Open World RPG",3,"Sea of Stars",2023],["Heavy AAA",4,"Max Payne 3",2012],["Racing",2,"The Crew Motorfest",2023],["Racing",2,"Forza Horizon 4",2018],["Sports",2,"Session: Skate Sim",2022],["Action Adventure",3,"Spider-Man: Miles Morales",2022],["Strategy",2,"Shadow Empire",2020],["Strategy",2,"Rise of Nations",2003],["Narrative Adventure",2,"The Quarry",2022],["Shooter",3,"Hell Let Loose",2021],["Action Adventure",3,"Marvel's Guardians of the Galaxy",2021],["Battle Royale and Multiplayer",2,"Smite",2014],["Metroidvania",1,"Sundered",2017],["Shooter",4,"Dead Space",2023],["JRPG and Anime",3,"God Eater 3",2019],["Strategy",2,"Bad North",2018],["Shooter",3,"Tom Clancy's The Division 2",2019],["Puzzle",1,"Tunic",2022],["Strategy",2,"Europa Universalis IV",2013],["Narrative Adventure",2,"The Dark Pictures: Man of Medan",2019],["Fighting",2,"Multiversus",2022],["Battle Royale and Multiplayer",2,"Elder Scrolls Online",2014],["Fighting",2,"Street Fighter 6",2023],["Platformer",1,"Katana ZERO",2019],["Heavy AAA",4,"Grand Theft Auto: The Trilogy Definitive Edition",2021],["Strategy",2,"Frostpunk",2018],["Horror",2,"Poppy Playtime: Chapter 1",2021],["Heavy AAA",4,"Death Stranding Directors Cut",2020],["Sim and Space",3,"X-Plane 12",2022],["Sim and Space",3,"Construction Simulator",2022],["Open World RPG",3,"Kingdom Come: Deliverance",2018],["Heavy AAA",4,"Senua's Saga: Hellblade II",2024],["Sports",2,"FIFA 20",2019],["Racing",2,"GRID Legends",2022],["Heavy AAA",4,"Red Dead Online",2019],["Souls-like and Hack and Slash",3,"Thymesia",2022],["Souls-like and Hack and Slash",3,"Samurai Warriors 5",2021],["Action Adventure",3,"Assassin's Creed Unity",2014],["Strategy",2,"Total War: Warhammer II",2017],["Heavy AAA",4,"Wuchang: Fallen Feathers",2025],["Racing",2,"Trials Rising",2019],["Metroidvania",1,"Salt and Sanctuary",2016],["Heavy AAA",4,"Max Payne 2",2003],["Fighting",2,"Dragon Ball FighterZ",2018],["Open World RPG",4,"Like a Dragon: Infinite Wealth",2024],["JRPG and Anime",3,"Trails of Cold Steel IV",2020],["Open World RPG",3,"Greedfall",2019],["Open World RPG",4,"Dragon Age: The Veilguard",2024],["Sim and Space",3,"Cities in Motion 2",2013],["Action Adventure",4,"Assassin's Creed Odyssey",2018],["Cozy and Simulation",1,"House Flipper",2018],["Horror",2,"Dredge",2023],["Battle Royale and Multiplayer",2,"Neverwinter",2013],["Action Adventure",3,"Saints Row: The Third",2011],["Souls-like and Hack and Slash",3,"Dark Souls: Remastered",2018],["Open World RPG",3,"Yakuza 3 Remastered",2023],["Shooter",3,"Dead Space 2",2011],["Shooter",3,"Battlefield 1",2016],["Battle Royale and Multiplayer",2,"Aion Classic",2021],["Roguelike",1,"FTL: Faster Than Light",2012],["Platformer",1,"Spelunky 2",2020],["Survival and Crafting",3,"Unturned",2017],["Action Adventure",4,"Star Wars Jedi: Fallen Order",2019],["Action Adventure",3,"Mafia II: Definitive Edition",2020],["Open World RPG",3,"Divinity: Original Sin 2",2017],["Sim and Space",3,"OpenTTD",2004],["Sports",2,"Cricket 24",2024],["Horror",2,"Outlast 2",2017],["Horror",2,"Resident Evil Revelations",2013],["JRPG and Anime",3,"Atelier Sophie 2",2022],["Souls-like and Hack and Slash",3,"Ninja Gaiden Master Collection",2021],["Shooter",3,"Call of Duty: Black Ops III",2015],["Shooter",3,"Insurgency: Sandstorm",2018],["Puzzle",1,"Lorelei and the Laser Eyes",2024],["Strategy",2,"Stellaris",2016],["Platformer",1,"A Hat in Time",2017],["JRPG and Anime",3,"Sword Art Online: Alicization Lycoris",2020],["JRPG and Anime",3,"Berserk and the Band of the Hawk",2017],["Horror",2,"Song of Horror",2019],["Survival and Crafting",3,"Grounded 2",2025],["Battle Royale and Multiplayer",2,"World of Tanks",2010],["Souls-like and Hack and Slash",3,"Fate/Extella",2018],["Horror",2,"Sker Ritual",2024],["Souls-like and Hack and Slash",3,"The Surge",2017],["Cozy and Simulation",1,"Papers Please",2013],["Puzzle",1,"Superliminal",2019],["Fighting",2,"Street Fighter V",2016],["JRPG and Anime",3,"Attack on Titan 2: Final Battle",2019],["Souls-like and Hack and Slash",3,"The Surge 2",2019],["Narrative Adventure",2,"The Walking Dead: The Final Season",2018],["JRPG and Anime",3,"Ni no Kuni II: Revenant Kingdom",2018],["Sports",2,"Golf With Your Friends",2020],["Souls-like and Hack and Slash",3,"Titan Quest Anniversary",2016],["Shooter",3,"Wolfenstein II: The New Colossus",2017],["Heavy AAA",4,"Stellar Blade",2025],["Shooter",3,"S.T.A.L.K.E.R.: Call of Pripyat",2010],["Shooter",3,"Ghostrunner",2020],["Survival and Crafting",4,"Enshrouded",2024],["Metroidvania",1,"Timespinner",2018],["Horror",2,"Visage",2020],["Horror",2,"Resident Evil Remake",2015],["JRPG and Anime",3,"Sword Art Online: Fatal Bullet",2018],["Battle Royale and Multiplayer",2,"Spellbreak",2020],["Shooter",3,"Far Cry 3",2012],["Sim and Space",3,"Shapez 2",2024],["Puzzle",1,"Oxenfree",2016],["Strategy",2,"Jurassic World Evolution 2",2021],["Shooter",3,"DOOM",2016],["Puzzle",1,"Chants of Sennaar",2023],["Strategy",2,"XCOM 2",2016],["Action Adventure",4,"Gotham Knights",2022],["JRPG and Anime",3,"Final Fantasy VII",2013],["Racing",2,"BeamNG.drive",2015],["Survival and Crafting",3,"Conan Exiles",2018],["Fighting",2,"Injustice 2",2017],["Action Adventure",3,"Lego Batman 3",2014],["Battle Royale and Multiplayer",2,"Tribes 3: Rivals",2023],["Souls-like and Hack and Slash",3,"Wo Long: Fallen Dynasty",2023],["Fighting",2,"Naruto Shippuden: Ultimate Ninja Storm Trilogy",2017],["Shooter",3,"Crysis",2007],["Action Adventure",3,"Middle-earth: Shadow of War",2017],["Racing",2,"Riders Republic",2021],["Heavy AAA",4,"Grand Theft Auto: Vice City",2003],["Shooter",3,"Left 4 Dead",2008],["Platformer",1,"Inside",2016],["Platformer",1,"Gris",2018],["Survival and Crafting",3,"State of Decay 2",2020],["Heavy AAA",4,"Red Dead Redemption",2023],["Strategy",2,"Tropico 6",2019],["Action Adventure",3,"Hitman 3",2021],["Puzzle",1,"Baba Is You",2019],["Racing",2,"DiRT 5",2020],["JRPG and Anime",3,"Trails through Daybreak",2024],["Narrative Adventure",4,"A Plague Tale: Requiem",2022],["Open World RPG",3,"Gothic II",2002],["Action Adventure",3,"Days Gone",2021],["Strategy",2,"XCOM: Enemy Unknown",2012],["Horror",2,"F.E.A.R.",2005],["Horror",2,"Amnesia: Rebirth",2020],["Action Adventure",3,"Tomb Raider",2013],["Shooter",3,"Borderlands 3",2019],["Platformer",1,"Psychonauts 2",2021],["JRPG and Anime",3,"A.O.T. Wings of Freedom",2016],["Shooter",3,"Metro 2033 Redux",2014],["Roguelike",1,"Wizard of Legend",2018],["Open World RPG",3,"Yakuza 5 Remastered",2023],["Survival and Crafting",3,"The Escapists 2",2017],["Platformer",1,"The Messenger",2018],["Shooter",3,"Far Cry New Dawn",2019],["Sports",2,"Rocket Arena",2020],["Shooter",3,"Battlefield Hardline",2015],["Action Adventure",3,"Rise of the Tomb Raider",2016],["Shooter",3,"Ghost Recon Breakpoint",2019],["JRPG and Anime",3,"Trails of Cold Steel III",2019],["Platformer",1,"Rayman Origins",2012],["JRPG and Anime",3,"Dragon Quest Builders 2",2019],["Shooter",3,"Bulletstorm: Full Clip Edition",2017],["Shooter",3,"Wolfenstein: The New Order",2014],["Metroidvania",1,"Haiku the Robot",2022],["Puzzle",1,"Firewatch",2016],["Sports",2,"OlliOlli World",2022],["Roguelike",1,"Risk of Rain 2",2019],["Open World RPG",3,"Fallout 3",2008],["Horror",2,"R.E.P.O.",2025],["Battle Royale and Multiplayer",2,"Splitgate",2019],["Platformer",1,"Braid",2009],["Narrative Adventure",2,"Grim Fandango Remastered",2015],["Action Adventure",3,"Uncharted: Legacy of Thieves Collection",2022],["Open World RPG",3,"Pillars of Eternity II: Deadfire",2018],["JRPG and Anime",3,"Code Vein",2019],["Sim and Space",3,"Freelancer",2003],["Heavy AAA",4,"Grand Theft Auto IV",2008],["Open World RPG",3,"Tyranny",2016],["Roguelike",1,"Darkest Dungeon II",2023],["Strategy",2,"RimWorld",2018],["Sim and Space",3,"Shapez",2020],["Horror",2,"Resident Evil 3 (2020)",2020],["Racing",2,"MotoGP 24",2024],["Shooter",3,"Arma Reforger",2022],["Racing",2,"F1 Manager 2024",2024],["Cozy and Simulation",1,"PowerWash Simulator",2022],["Strategy",2,"Sid Meier's Civilization IV",2005],["Heavy AAA",4,"Crysis 3 Remastered",2021],["Battle Royale and Multiplayer",2,"World of Warcraft Classic",2019],["Open World RPG",3,"Wasteland 3",2020],["Horror",2,"Five Nights at Freddy's: Help Wanted",2019],["Shooter",3,"Far Cry Primal",2016],["Narrative Adventure",2,"Day of the Tentacle Remastered",2016],["Sim and Space",3,"Hardspace: Shipbreaker",2022],["Platformer",1,"Little Nightmares II",2021],["Narrative Adventure",2,"Return to Monkey Island",2022],["Narrative Adventure",2,"Her Story",2015],["Roguelike",1,"The Binding of Isaac: Rebirth",2014],["Souls-like and Hack and Slash",3,"Darksiders III",2018],["Puzzle",1,"Escape Simulator",2021],["Roguelike",1,"Children of Morta",2019],["Souls-like and Hack and Slash",3,"Bayonetta",2017],["Action Adventure",3,"Mafia III: Definitive Edition",2020],["Strategy",2,"Age of Empires III: Definitive Edition",2020],["JRPG and Anime",3,"Tokyo Xanadu",2017],["Racing",2,"Project CARS 3",2020],["Strategy",2,"Oxygen Not Included",2019],["Strategy",2,"Orcs Must Die! 3",2021],["Open World RPG",3,"Yakuza: Like a Dragon",2020],["Battle Royale and Multiplayer",2,"Throne and Liberty",2024],["Souls-like and Hack and Slash",3,"Ninja Gaiden Sigma",2007],["Fighting",2,"JoJo's Bizarre Adventure: All-Star Battle R",2022],["Racing",2,"Steep",2016],["Shooter",3,"Post Scriptum",2018],["Platformer",1,"Fez",2012],["Heavy AAA",4,"Total War: Attila",2015],["Shooter",4,"Battlefield 6",2025],["Sim and Space",3,"Kerbal Space Program 2",2023],["Strategy",2,"They Are Billions",2019],["Sim and Space",3,"Rebel Galaxy",2015],["Puzzle",1,"Gone Home",2013],["Fighting",2,"Mortal Kombat 11",2019],["Strategy",2,"Planet Zoo",2019],["Strategy",2,"Terra Invicta",2022],["Racing",2,"Project CARS 2",2017],["Fighting",2,"Dragon Ball Xenoverse 2",2016],["Battle Royale and Multiplayer",2,"Once Human",2024],["JRPG and Anime",3,"Persona 5 Royal",2022],["Puzzle",1,"Inscryption",2021],["Battle Royale and Multiplayer",2,"Heroes of the Storm",2015],["Heavy AAA",4,"Split Fiction",2025],["Heavy AAA",4,"Monster Hunter Rise",2022],["Strategy",2,"Old World",2021],["Roguelike",1,"Noita",2020],["Shooter",3,"Crysis Remastered",2020],["Souls-like and Hack and Slash",3,"Darksiders II Deathinitive",2015],["Fighting",2,"2XKO",2025],["Action Adventure",3,"Assassin's Creed IV: Black Flag",2013],["Narrative Adventure",2,"The Vanishing of Ethan Carter",2014],["Cozy and Simulation",1,"Slime Rancher 2",2022],["Action Adventure",3,"Star Wars: Knights of the Old Republic",2003],["Battle Royale and Multiplayer",2,"Ring of Elysium",2019],["Battle Royale and Multiplayer",2,"Realm Royale",2018],["Shooter",3,"Battlefield 3",2011],["Horror",4,"Silent Hill f",2025],["Action Adventure",3,"Lego Jurassic World",2015],["Horror",2,"Layers of Fear 2016",2016],["Horror",2,"Devour",2021],["Open World RPG",3,"The Elder Scrolls Oblivion Remastered",2025],["Battle Royale and Multiplayer",2,"Heroes and Generals",2016],["Puzzle",1,"Manifold Garden",2019],["Action Adventure",3,"Lego Harry Potter Collection",2018],["Sim and Space",3,"Lawn Mowing Simulator",2021],["Action Adventure",3,"Remnant: From the Ashes",2019],["Battle Royale and Multiplayer",2,"War Thunder",2013],["Metroidvania",1,"Carrion",2020],["Strategy",2,"Hearts of Iron IV",2016],["Open World RPG",3,"Fallout: New Vegas",2010],["Strategy",2,"Sins of a Solar Empire II",2024],["Survival and Crafting",3,"Don't Starve",2013],["Souls-like and Hack and Slash",3,"Torchlight Infinite",2024],["Horror",2,"Poppy Playtime: Chapter 3",2024],["Fighting",2,"Virtua Fighter 5 R.E.V.O.",2021],["Horror",2,"Martha Is Dead",2022],["Sim and Space",3,"Timberborn",2021],["Action Adventure",3,"Hitman 2",2018],["Horror",2,"Mundaun",2021],["Horror",2,"Resident Evil 7: Biohazard",2017],["Action Adventure",3,"Batman: Arkham Asylum",2010],["Shooter",4,"Returnal",2023],["JRPG and Anime",3,"Scarlet Nexus",2021],["JRPG and Anime",3,"Persona 5 Tactica",2023],["Sim and Space",3,"Ace Combat 7: Skies Unknown",2019],["Action Adventure",3,"Dishonored: Death of the Outsider",2017],["Fighting",2,"Bleach: Rebirth of Souls",2025],["Shooter",3,"Serious Sam 4",2020],["Racing",2,"F1 2021",2021],["Racing",2,"iRacing",2008],["Souls-like and Hack and Slash",3,"Dark Souls II: Scholar of the First Sin",2015],["Survival and Crafting",4,"Nightingale",2024],["Battle Royale and Multiplayer",2,"Star Wars: The Old Republic",2011],["Puzzle",1,"Return of the Obra Dinn",2018],["Racing",2,"Automobilista 2",2020],["Sports",2,"Tony Hawk's Pro Skater 1+2",2020],["Souls-like and Hack and Slash",3,"Lords of the Fallen 2014",2014],["Sports",2,"Golf It!",2017],["Action Adventure",4,"The Callisto Protocol",2022],["Sim and Space",3,"Space Engineers 2",2025],["Metroidvania",1,"Animal Well",2024],["Survival and Crafting",3,"Ancestors: The Humankind Odyssey",2019],["Heavy AAA",4,"Alan Wake Remastered",2021],["Survival and Crafting",3,"Space Engineers",2019],["Heavy AAA",4,"Total War: Troy",2020],["Racing",2,"Dirt 4",2017],["Fighting",2,"One Piece: Pirate Warriors 4",2020],["Racing",2,"Assetto Corsa EVO",2025],["Sim and Space",3,"Empire of the Ants",2024],["Horror",2,"SOMA",2015],["JRPG and Anime",3,"Disgaea 6 Complete",2021],["Narrative Adventure",2,"Heavy Rain",2019],["Puzzle",1,"Machinarium",2009],["Narrative Adventure",2,"Night in the Woods",2017],["Horror",2,"Five Nights at Freddy's: Security Breach",2021]];
+(function(){
+  const have=new Set(GAMES.map(g=>g.name.toLowerCase()));
+  MORE_GAMES.forEach(([ge,t,n,y])=>{
+    if(have.has(n.toLowerCase())) return; have.add(n.toLowerCase());
+    let tt=t; if(y<=2009) tt=1; else if(y<=2013) tt=Math.min(tt,2); else if(y<=2016) tt=Math.min(tt,3);
+    const [ms,rs,mr,rr,gb,fps]=TIERS[tt];
+    const cw=/Strateg|Simulat|Builder/i.test(ge)?0.65:/Shooter|Multiplayer/i.test(ge)?0.5:0.35;
+    const hue=Math.abs([...n].reduce((a,c)=>(a*31+c.charCodeAt(0))|0,7))%360;
+    GAMES.push({id:n.toLowerCase().replace(/[^a-z0-9]+/g,'-'),name:n,genre:ge,year:y,icon:'',grad:[hx(hue,55,46),hx((hue+40)%360,40,10)],
+      min:{gpu:nearGpu(ms),cpu:cpuLbl(ms),ram:mr,storage:gb+' GB'},rec:{gpu:nearGpu(rs),cpu:cpuLbl(rs),ram:rr,storage:gb+' GB'},
+      refFPS:fps,cpuWeight:cw,minScore:ms,recScore:rs,est:true});
+  });
+})();
+
+// ---- Bulk import: CSV / JSON / plain "name,year,genre" lines. Specs are estimated from genre + year.
+const LIGHT=/Indie|Casual|Puzzle|Card|Visual Novel|Platformer|Pixel|2D|Retro|Board/i, HEAVY=/Massively|Shooter|FPS|Open World|Survival|Battle Royale/i;
+function addImported(rows){
+  const have=new Set(GAMES.map(g=>g.name.toLowerCase())); let added=0;
+  rows.forEach(([n,ge,y])=>{
+    n=String(n||'').trim(); ge=String(ge||'Game').trim()||'Game'; y=parseInt(y)||2015;
+    if(n.length<2||n.length>70||have.has(n.toLowerCase())) return; have.add(n.toLowerCase());
+    let t=LIGHT.test(ge)?1:HEAVY.test(ge)?3:2;
+    if(y>=2022&&!LIGHT.test(ge)&&t<5) t++;
+    if(y<=2009) t=1; else if(y<=2013) t=Math.min(t,2); else if(y<=2016) t=Math.min(t,3);
+    const [ms,rs,mr,rr,gb,fps]=TIERS[t];
+    const hue=Math.abs([...n].reduce((a,c)=>(a*31+c.charCodeAt(0))|0,7))%360;
+    GAMES.push({id:'imp-'+GAMES.length,name:n,genre:ge.split(/[;,]/)[0].trim().slice(0,30),year:y,icon:'',grad:[hx(hue,55,46),hx((hue+40)%360,40,10)],
+      min:{gpu:nearGpu(ms),cpu:cpuLbl(ms),ram:mr,storage:gb+' GB'},rec:{gpu:nearGpu(rs),cpu:cpuLbl(rs),ram:rr,storage:gb+' GB'},
+      refFPS:fps,cpuWeight:/Strateg|Simulat/i.test(ge)?0.65:0.4,minScore:ms,recScore:rs,est:true});
+    added++;
+  });
+  return added;
+}
+function parseCSV(text){
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c==='"') q=true; else if(c===','){row.push(f);f='';}
+    else if(c==='\n'){row.push(f);rows.push(row);row=[];f='';} else if(c!=='\r') f+=c;
+  }
+  if(f||row.length){row.push(f);rows.push(row);} return rows;
+}
+function extractRows(text,limit){
+  text=text.replace(/^\uFEFF/,''); const t=text.trim(); let out=[];
+  if(t[0]==='{'||t[0]==='['){
+    const d=JSON.parse(t); const arr=Array.isArray(d)?d:Object.values(d);
+    out=arr.map(g=>({n:g.name||g.Name, ge:Array.isArray(g.genres)?g.genres.join(';'):(g.genres||g.genre||g.Genres||''), y:(String(g.release_date||g.year||g['Release date']||'').match(/(19|20)\d\d/)||[])[0], pop:+(g.peak_ccu||g['Peak CCU']||0)}));
+  } else {
+    const rows=parseCSV(t); const h=(rows[0]||[]).map(x=>x.trim().toLowerCase());
+    const ix=k=>h.findIndex(x=>k.includes(x)); const iN=ix(['name']);
+    if(iN>=0){
+      const iD=ix(['release date','release_date','year']), iG=ix(['genres','genre']), iP=ix(['peak ccu']);
+      out=rows.slice(1).map(r=>({n:r[iN], ge:iG>=0?r[iG]:'', y:iD>=0?(String(r[iD]).match(/(19|20)\d\d/)||[])[0]:'', pop:iP>=0?+r[iP]||0:0}));
+    } else out=rows.map(r=>({n:r[0], y:(String(r[1]).match(/(19|20)\d\d/)||[])[0], ge:r[2]||'', pop:0}));
+  }
+  out=out.filter(o=>o.n);
+  if(out.some(o=>o.pop)) out.sort((a,b)=>b.pop-a.pop);
+  return out.slice(0,limit).map(o=>[o.n,o.ge,o.y]);
+}
+function importText(text,limit=5000){ const rows=extractRows(text,limit); return {rows,added:addImported(rows)}; }
+
+// ---- Curated Steam list supplied by the site owner (names only; specs estimated from title heuristics) ----
+const NAMED_RAW="Grand Theft Auto IV;Raft;Subnautica: Below Zero;Project Zomboid;DayZ;Don't Starve{|: Together};Unturned;Minecraft Dungeons;Back 4 Blood;Resident Evil {0|2|3|5|6|7|Village|Revelations|Revelations 2|Resistance|Re:Verse};Outlast{| 2|: Trials};Amnesia: {The Dark Descent|Rebirth|The Bunker};Alien: Isolation;SOMA;Little Nightmares{| II};Ori and the Blind Forest;Portal;Half-Life{| 2};Garry's Mod;Left 4 Dead;The Elder Scrolls V: Skyrim;Fallout{: New Vegas| 76};Mass Effect{| 2| 3| Legendary Edition};Dragon Age{: Origins| II|: Inquisition};Dragon's Dogma 2;Monster Hunter Rise;Dark Souls{ Remastered| II| II: Scholar of the First Sin};Nioh{| 2};Mortal Shell;Lords of the Fallen;Remnant{: From the Ashes| II};Devil May Cry {3|4|4 Special Edition|5|HD Collection};DmC: Devil May Cry;Bayonetta{| 2};Metal Gear Solid V: The Phantom Pain;Death Stranding{| 2};Control;Alan Wake{| 2};Quantum Break;DOOM;Wolfenstein: The New Order;Wolfenstein II: The New Colossus;Titanfall 2;Battlefield {1|V|2042};Call of Duty: {Black Ops III|Black Ops II|Modern Warfare II|Modern Warfare III};Halo: The Master Chief Collection;Borderlands {2|3};Tiny Tina's Wonderlands;Far Cry {3|4|5|6};Assassin's Creed {II|Brotherhood|Revelations|III|IV: Black Flag|Unity|Origins|Odyssey|Valhalla|Mirage};Watch Dogs{| 2|: Legion};Just Cause {2|3|4};Sleeping Dogs;Mafia{| II| III|: Definitive Edition};Saints Row{: The Third| IV| 2|: Gat out of Hell|};Max Payne{| 2| 3};L.A. Noire;Bully: Scholarship Edition;American Truck Simulator;BeamNG.drive;Assetto Corsa{| Competizione};Forza Horizon {4|5};Need for Speed {Heat|Unbound};The Crew {2|Motorfest};F1 {24|25};EA SPORTS FC {24|25|26};eFootball;Football Manager {2024|2025};WWE 2K{24|25};TEKKEN {7|8};Street Fighter {V|6};Mortal Kombat {11|1};Guilty Gear -Strive-;Brawlhalla;MultiVersus;Gang Beasts;Human: Fall Flat;Totally Reliable Delivery Service;Goat Simulator{| 3};PowerWash Simulator;House Flipper{| 2};PC Building Simulator{| 2};Car Mechanic Simulator 2021;Farming Simulator {22|25};Cities: Skylines{| II};Planet Zoo;Planet Coaster{| 2};Jurassic World Evolution{| 2};Civilization {V|VI|VII};Age of Mythology: Retold;Total War: {WARHAMMER III|THREE KINGDOMS|ROME II};Crusader Kings III;Europa Universalis IV;Hearts of Iron IV;Stellaris;RimWorld;Factorio;Satisfactory;Dyson Sphere Program;Oxygen Not Included;Prison Architect;Frostpunk{| 2};This War of Mine;Banished;Anno {1800|2205};Tropico 6;Northgard;They Are Billions;XCOM 2;XCOM: Enemy Unknown;Into the Breach;Slay the Spire;Balatro;Inscryption;Vampire Survivors;Brotato;Enter the Gungeon;The Binding of Isaac: Rebirth;Risk of Rain{ 2| Returns};Rogue Legacy 2;Spelunky{| 2};Blasphemous{| 2};Salt and Sanctuary;Salt and Sacrifice;Shovel Knight: Treasure Trove;Katana ZERO;Hotline Miami{| 2};Broforce;Axiom Verge{| 2};The Messenger;Hyper Light Drifter;Tunic;Death's Door;Cocoon;Limbo;Inside;Gris;Journey;Abzu;Firewatch;What Remains of Edith Finch;Outer Wilds;Return of the Obra Dinn;Disco Elysium;The Stanley Parable: Ultra Deluxe;Deltarune;Omori;To the Moon;Finding Paradise;OneShot;Night in the Woods;Oxenfree{| II};Life is Strange{| 2|: True Colors};Tell Me Why;Detroit: Become Human;Heavy Rain;Beyond: Two Souls;The Walking Dead: Season One;The Wolf Among Us;Tales from the Borderlands;Batman: Arkham {Asylum|City|Knight};Middle-earth: Shadow of {Mordor|War};Mad Max;Darksiders{| II| III| Genesis};Prototype{| 2};Sunset Overdrive;Hi-Fi RUSH;Psychonauts{| 2};Ratchet & Clank: Rift Apart;Sackboy: A Big Adventure;Kena: Bridge of Spirits;Stray;A Plague Tale: {Innocence|Requiem};Hellblade: Senua's Sacrifice;Senua's Saga: Hellblade II;The Medium;Observer: System Redux;Layers of Fear{| 2};Visage;MADiSON;Devour;Pacify;The Mortuary Assistant;Poppy Playtime;Bendy and the {Ink Machine|Dark Revival};Garten of Banban;FNAF: Security Breach;Five Nights at Freddy's{| 2| 3| 4};Demonologist;Forewarned;Labyrinthine;SCP: Secret Laboratory;GTFO;Killing Floor {2|3};PAYDAY {2|3};Deep Rock Galactic;Warframe;Path of Exile{| 2};Lost Ark;New World: Aeternum;Black Desert;Albion Online;Guild Wars 2;The Elder Scrolls Online;FINAL FANTASY XIV Online;RuneScape;Old School RuneScape;World of Tanks;World of Warships;Enlisted;War Thunder;Crossout;Paladins;SMITE;THE FINALS;Marvel Rivals;Naraka: Bladepoint;Squad;Hell Let Loose;Insurgency: Sandstorm;Ready or Not;Ground Branch;Arma {3|Reforger};Day of Infamy;Rising Storm 2: Vietnam;Verdun;Tannenberg;Isonzo;Foxhole;Post Scriptum;Squad 44;Beyond The Wire;Hellish Quart;Mordhau;Chivalry 2;Mount & Blade: Warband;Mount & Blade II: Bannerlord;Kingdom Come: Deliverance{| II};Medieval Dynasty;Manor Lords;Conan Exiles;Enshrouded;V Rising;Grounded;Smalland: Survive the Wilds;Icarus;The Long Dark;Green Hell;Stranded Deep;The Planet Crafter;Astroneer;No Man's Sky;Starbound;Core Keeper;Necesse;Scrap Mechanic;Trailmakers;Besiege;Space Engineers;Empyrion - Galactic Survival;Stationeers;Hydroneer;Medieval Engineers;Eco;State of Decay{| 2|: Year-One};Dying Light{| 2 Stay Human};Dead Island{| Riptide| 2};World War Z;Zombie Army 4: Dead War;Sniper Elite {3|4|5};Sniper Ghost Warrior 3;Sniper Ghost Warrior Contracts{| 2};Hitman{| 2| 3|: Absolution};Deus Ex: {Human Revolution|Mankind Divided};Dishonored{| 2|: Death of the Outsider};Prey;Prey: Mooncrash;BioShock{| 2| Infinite};System Shock{| 2};Crysis{| 2| 3};Metro 2033 Redux;Metro: Last Light Redux;Metro Exodus;S.T.A.L.K.E.R.: {Shadow of Chernobyl|Clear Sky|Call of Pripyat};S.T.A.L.K.E.R. 2: Heart of Chornobyl;Atomic Heart;Rage{| 2};Bulletstorm;Singularity;Spec Ops: The Line;F.E.A.R.{| 2| 3};Dead Space{| 2| 3| Remake};The Callisto Protocol;Scorn;Tormented Souls{| 2};Signalis;The Evil Within{| 2};NieR:Automata;NieR Replicant;FINAL FANTASY VII {REMAKE INTERGRADE|REBIRTH};FINAL FANTASY {XV|XVI|X/X-2 HD Remaster|XII THE ZODIAC AGE|XIII|XIII-2};Lightning Returns: FINAL FANTASY XIII;Kingdom Hearts III;Kingdom Hearts HD 1.5+2.5 ReMIX;Tales of {Arise|Berseria};Tales of Vesperia: Definitive Edition;Persona {3 Reload|4 Golden|5 Royal|5 Strikers|4 Arena Ultimax};Shin Megami Tensei V: Vengeance;Yakuza {0|Kiwami|Kiwami 2|3 Remastered|4 Remastered|5 Remastered|6: The Song of Life};Yakuza: Like a Dragon;Like a Dragon: Infinite Wealth;Like a Dragon Gaiden;Lost Judgment;Judgment;Dragon Ball Z: Kakarot;Dragon Ball Xenoverse{| 2};Dragon Ball FighterZ;Naruto Shippuden: Ultimate Ninja Storm 4;Naruto to Boruto: Shinobi Striker;One Piece: Pirate Warriors 4;One Piece Odyssey;Attack on Titan 2;Demon Slayer -Kimetsu no Yaiba- The Hinokami Chronicles;JoJo's Bizarre Adventure: All-Star Battle R;JUMP FORCE;My Hero Ultra Rumble;Bleach: Brave Souls;Sword Art Online: Fatal Bullet;Code Vein;Scarlet Nexus;God Eater 3;Granblue Fantasy: Relink;Ys VIII: Lacrimosa of Dana;Ys IX: Monstrum Nox;Octopath Traveler{| II};Bravely Default II;Triangle Strategy;Tactics Ogre: Reborn;Live A Live;Chrono Trigger;Chained Echoes;Sea of Stars;Eiyuden Chronicle: Hundred Heroes;Dragon Quest XI S;Ni no Kuni: Wrath of the White Witch;Ni no Kuni II: Revenant Kingdom;Atelier Ryza{| 2| 3};Disgaea {5 Complete|7};Valkyria Chronicles{| 4};Star Ocean: {The Divine Force|The Second Story R};The Legend of Heroes: Trails of Cold Steel{| II| III| IV};Danganronpa: Trigger Happy Havoc;Danganronpa 2: Goodbye Despair;Danganronpa V3: Killing Harmony;AI: The Somnium Files{| - nirvanA Initiative};13 Sentinels: Aegis Rim;Zero Escape: The Nonary Games;Phoenix Wright: Ace Attorney Trilogy;Apollo Justice: Ace Attorney Trilogy;The Great Ace Attorney Chronicles;Professor Layton and the New World of Steam;VA-11 Hall-A;Coffee Talk{| Episode 2};Dwarf Fortress;Dungeons 4;Dungeon Keeper 2;Dungeon of the Endless;Endless Space{| 2};Endless Legend;Humankind;Old World;Against the Storm;Songs of Syx;Workers & Resources: Soviet Republic;Transport Fever{| 2};OpenTTD;Railway Empire{| 2};Train Sim World {4|5};Derail Valley;Mini Metro;Mini Motorways;Dorfromantik;Islanders;Townscaper;Timberborn;Foundation;Farthest Frontier;Going Medieval;Surviving Mars;Surviving the Aftermath;Ixion;Stronghold {HD|Crusader HD|Crusader 2|Legends|: Definitive Edition};Command & Conquer Remastered Collection;StarCraft II;Warcraft III: Reforged;Company of Heroes{| 2| 3};Men of War: Assault Squad 2;Steel Division 2;Regiments;Homeworld Remastered Collection;Homeworld 3;Desperados III;Shadow Tactics: Blades of the Shogun;Shadow Gambit: The Cursed Crew;Mutant Year Zero: Road to Eden;Phoenix Point;Battletech;MechWarrior 5: {Mercenaries|Clans};Everspace{| 2};Chorus;Rebel Galaxy{| Outlaw};FTL: Faster Than Light;Darkest Dungeon{| II};Battle Brothers;Wartales;The Banner Saga{| 2| 3};Wasteland {2|3};Pathfinder: {Kingmaker|Wrath of the Righteous};Pillars of Eternity{| II: Deadfire};Tyranny;Divinity: Original Sin{| 2};Solasta: Crown of the Magister;Shadowrun: {Dragonfall|Hong Kong};Torment: Tides of Numenera;Icewind Dale: Enhanced Edition;Planescape: Torment: Enhanced Edition;Neverwinter Nights: Enhanced Edition;Star Wars Jedi: {Fallen Order|Survivor};Star Wars: Knights of the Old Republic{| II};Star Wars: The Force Unleashed;LEGO Star Wars: The Skywalker Saga;LEGO Marvel Super Heroes;LEGO Batman 3: Beyond Gotham;LEGO Harry Potter: Years {1-4|5-7};LEGO Jurassic World;LEGO The Hobbit;LEGO The Lord of the Rings;LEGO DC Super-Villains;LEGO City Undercover;LEGO The Incredibles;LEGO 2K Drive;Sonic {Frontiers|Mania|Superstars|Generations|Adventure 2|Colors: Ultimate|Forces|Origins};Crash Bandicoot N. Sane Trilogy;Crash Bandicoot 4: It's About Time;Spyro Reignited Trilogy;A Hat in Time;Yooka-Laylee{| and the Impossible Lair};Rayman {Legends|Origins};Super Meat Boy{| Forever};The Binding of Isaac;Fez;Braid;World of Goo;Little Inferno;Untitled Goose Game;Moving Out{| 2};Overcooked{| 2};PlateUp!;Unrailed!;Ultimate Chicken Horse;Pummel Party;Stick Fight: The Game;Duck Game;Castle Crashers;BattleBlock Theater;Totally Accurate Battle Simulator;Totally Accurate Battlegrounds;Party Animals;Content Warning;Pico Park{| 2};We Were Here{| Too| Together| Forever};A Way Out;Unravel{| Two};Operation: Tango;Escape Academy;Keep Talking and Nobody Explodes;The Past Within;Tick Tock: A Tale for Two;Bokura;Bread & Fred;Lovers in a Dangerous Spacetime;Castle Story;Trine Enchanted Edition;Trine {2|3|4|5};Guacamelee!{| 2};Dust: An Elysian Tail;Ender Lilies: Quietus of the Knights;Ender Magnolia: Bloom in the Mist;Nine Sols;The Last Faith;Aeterna Noctis;Grime;Death's Gambit: Afterlife;Moonscars;Haiku the Robot;20 Minutes Till Dawn;Halls of Torment;Deep Rock Galactic: Survivor;Soulstone Survivors;Exit the Gungeon;Nuclear Throne;Wizard of Legend{| 2};Risk of Rain;Loop Hero;Monster Train;Griftlands;Across the Obelisk;Wildfrost;Fights in Tight Spaces;Dicey Dungeons;Peglin;Luck be a Landlord;Backpack Hero;Backpack Battles;Dome Keeper;Wall World;Nova Drift;Brotato: Abyssal Terrors;Darkwood;Faith: The Unholy Trinity;Mouthwashing;Iron Lung;Buckshot Roulette;Fear the Spotlight;World of Horror;DreadOut{| 2};Song of Horror;Home Sweet Home{|: Survive};Devotion;Detention;White Day: A Labyrinth Named School;The Coma: Recut;The Coma 2: Vicious Sisters;Little Goody Two Shoes;Martha Is Dead;Remothered: {Tormented Fathers|Broken Porcelain};Alisa;Them and Us;Conarium;Call of Cthulhu;Sherlock Holmes: The Devil's Daughter;Sherlock Holmes Chapter One;The Sinking City;The Council;Vampyr;GreedFall{| 2};Technomancer;ELEX{| II};Outward{| Definitive Edition};Gothic{| II| 3};Risen{| 2: Dark Waters| 3: Titan Lords};Two Worlds{| II};Kingdoms of Amalur: Re-Reckoning;Dragon's Dogma: Dark Arisen;Torchlight{| II| III| Infinite};Grim Dawn;Titan Quest Anniversary Edition;Last Epoch;Wolcen: Lords of Mayhem;Diablo II: Resurrected;Undecember;Victor Vran;Sacred 2 Gold;Dead Rising{| 2| 3| 4};Days Gone{| Remastered|: Broken Road};The Walking Dead: {Definitive Series|Saints & Sinners|Saints & Sinners - Chapter 2};World War Z: Aftermath;Warhammer: Vermintide 2;Warhammer 40,000: {Darktide|Boltgun|Rogue Trader|Mechanicus|Chaos Gate};Space Marine{| 2};Warhammer: Chaosbane;Total War: WARHAMMER{| II};Total War: {Shogun 2|Attila|Rome Remastered|Pharaoh};A Total War Saga: Troy;Halo Wars{| 2};Gears 5;Gears of War: Ultimate Edition;Gears Tactics;Ryse: Son of Rome;The Surge{| 2};Steelrising;Thymesia;Wo Long: Fallen Dynasty;Stranger of Paradise: FINAL FANTASY ORIGIN;Elden Ring Nightreign;Armored Core VI: Fires of Rubicon;Monster Hunter Wilds;Wild Hearts;Dauntless;Toukiden 2;Sleeping Dogs: Definitive Edition;Marvel's Spider-Man {Remastered|2};Marvel's Spider-Man: Miles Morales;God of War{| Ragnarök};Horizon {Zero Dawn Complete Edition|Forbidden West Complete Edition};";
+const N_LIGHT=/Undertale|Deltarune|Omori|Terraria|Stardew|Starbound|Core Keeper|Necesse|Hades|Cuphead|Ori and|Limbo|^Inside$|Gris|Braid|^Fez$|Journey|Abzu|To the Moon|Finding Paradise|OneShot|Night in the Woods|Oxenfree|Vampire Survivors|Brotato|Balatro|Slay the Spire|Inscryption|Hotline|Broforce|Katana|Shovel|Spelunky|Binding of Isaac|Gungeon|Nuclear Throne|Hyper Light|^Tunic$|Death's Door|Cocoon|Axiom|Messenger|Blasphemous|Salt and|Overcooked|PlateUp|Unrailed|Pico Park|Moving Out|Duck Game|Castle Crashers|BattleBlock|Pummel|Stick Fight|We Were Here|Bokura|Bread & Fred|Lovers in|Trine|Guacamelee|Dust:|Ender |Nine Sols|Last Faith|Aeterna|Haiku|Mini Metro|Mini Motorways|Dorfromantik|Islanders|Townscaper|Danganronpa|Ace Attorney|Layton|VA-11|Coffee Talk|Somnium|Zero Escape|Loop Hero|Monster Train|Griftlands|Wildfrost|Dicey|Peglin|Luck be|Backpack|Dome Keeper|Wall World|Nova Drift|Halls of Torment|20 Minutes|Soulstone|World of Goo|Little Inferno|Goose|Human: Fall|Chicken Horse|Party Animals|Buckshot|Iron Lung|Mouthwashing|Crow Country|Fear the Spotlight|World of Horror|^Portal$|^Half-Life$|Team Fortress|Garry|Left 4 Dead|FNAF|Five Nights|Bendy|Poppy|Garten|Pacify|MADiSON|Devour|Mortuary|Chained Echoes|Sea of Stars|Live A Live|Chrono Trigger|Dungeon Keeper|Dwarf Fortress|Factorio|Oxygen Not|Prison Architect|Banished|Northgard|This War of Mine|FTL|Into the Breach|Darkest|Battle Brothers|Banner Saga|Sonic|Rayman|Crash Bandicoot|Spyro|^Psychonauts$|Super Meat|Stronghold|StarCraft|Warcraft|Command & Conquer|Tormented|Signalis|Darkwood|DreadOut|Home Sweet|Detention|White Day|The Coma|Goody|Alisa|Conarium|Ys |Valkyria|Disgaea|Atelier|Octopath|Bravely|Triangle|Tactics Ogre|Mount & Blade: Warband|Unturned|Brawlhalla|Enlisted|Moonscars|Grime|Yooka|Hat in Time|Untitled|Castle Story|Bulletstorm|Spec Ops|Wizard of Legend|Risk of Rain( Returns)?$|Rogue Legacy|Kingdom Come: Deliverance$|Dungeon of the Endless|Fights in Tight|Across the Obelisk|Phoenix Wright|Apollo Justice|Great Ace|Professor Layton|13 Sentinels|Tell Me Why|Stanley Parable|Return of the Obra|Firewatch|Edith Finch|Outer Wilds|Disco Elysium|Life is Strange|Walking Dead: (Season|Definitive)|Wolf Among Us|Borderlands$/i;
+const N_HEAVY=/Remake|Rebirth|Ragnar|Wilds|Forbidden West|Spider-Man 2|Hellblade II|Dragon's Dogma 2|Alan Wake 2|Callisto|Atomic Heart|Armored Core|Space Marine 2|Manor Lords|Frostpunk 2|Civilization VII|Deliverance II|Valhalla|Odyssey|Mirage|Origins|Exodus|Death Stranding|Days Gone|Horizon|Nioh 2|Lies of P|Lords of the Fallen|Jedi: Survivor|Skylines II|Planet Coaster 2|WARHAMMER III|Pharaoh|Battlefield (V|2042|1)|Modern Warfare I|Forza Horizon 5|F1 2[45]|FC 2[456]|Infinite Wealth|XVI|Nightreign|STALKER 2|S\.T\.A\.L\.K\.E\.R\. 2|Space Remake|Wo Long|Stranger of Paradise|Kingdom Come: Deliverance II|Gears 5|Ratchet|Kena|Requiem|Dying Light 2|Tekken 8|TEKKEN 8|Street Fighter 6|Mortal Kombat 1$|Crysis( 3)?$|Legion|Mafia III|Marvel's|God of War|Remnant II|Enshrouded|Sekiro|Control|Alan Wake$|Dead Space( Remake)?$|Assassin's Creed (Unity|III|IV)|Far Cry (5|6)|Cities: Skylines$|Planet Zoo|Anno|Rome II|THREE KINGDOMS|Hogwarts|Detroit|Red Dead|The Medium|Quantum Break|Hitman 3|Halo Wars 2|Star Ocean: The Divine|Tales of Arise|Persona 3 Reload|Metaphor|Jump Force|JUMP FORCE|Granblue|Kakarot|Guilty Gear|Vampyr|Greedfall 2|GreedFall 2|Darktide|Dauntless|Wild Hearts|Steelrising|Thymesia|Sniper Elite 5|Sniper Elite 4|Ground Branch|Squad|Hell Let Loose|Arma|Chivalry 2|Naraka|THE FINALS|Marvel Rivals|World War Z|Zombie Army 4|Killing Floor 3|PAYDAY 3|Icarus|Conan Exiles|V Rising|Smalland|Green Hell|The Long Dark|Planet Crafter/i;
+function expandName(s){
+  const m=s.match(/^(.*?)\{([^}]*)\}(.*)$/);
+  return m ? m[2].split('|').flatMap(o=>expandName(m[1]+o+m[3])) : [s];
+}
+function addNamed(raw){
+  const have=new Set(GAMES.map(g=>g.name.toLowerCase())); let added=0;
+  raw.split(';').map(x=>x.trim()).filter(Boolean).flatMap(expandName).forEach(n=>{
+    n=n.trim().replace(/\s+/g,' ');
+    if(n.length<2||have.has(n.toLowerCase())) return; have.add(n.toLowerCase());
+    const t=N_LIGHT.test(n)?1:N_HEAVY.test(n)?4:2;
+    const [ms,rs,mr,rr,gb,fps]=TIERS[t];
+    const hue=Math.abs([...n].reduce((a,c)=>(a*31+c.charCodeAt(0))|0,7))%360;
+    GAMES.push({id:'st-'+GAMES.length,name:n,genre:'Steam',year:0,icon:'',grad:[hx(hue,55,46),hx((hue+40)%360,40,10)],
+      min:{gpu:nearGpu(ms),cpu:cpuLbl(ms),ram:mr,storage:gb+' GB'},rec:{gpu:nearGpu(rs),cpu:cpuLbl(rs),ram:rr,storage:gb+' GB'},
+      refFPS:fps,cpuWeight:/Strateg|Simulat|Total War|Civilization|Cities|Anno|Paradox|Stellaris|Hearts of Iron|Europa|Crusader/i.test(n)?0.65:0.4,minScore:ms,recScore:rs,est:true});
+    added++;
+  });
+  return added;
+}
+addNamed(NAMED_RAW);
+const NAMED_RAW2="Bellwright;Voidtrain;Sunkenland;Forever Skies;Len's Island;The Infected;Survival: Fountain of Youth;Survivalist: Invisible Strain;Survivalist;Subsistence;Mist Survival;Miscreated;The Front;Night of the Dead;How to Survive;How to Survive 2;Dead Frontier 2;Contagion;No More Room in Hell;No More Room in Hell 2;Unturned Arena;Project Warlock;Project Warlock 2;Amid Evil;DUSK;Ultrakill;Ion Fury;Amid Evil: The Black Labyrinth;Prodeus;Turbo Overkill;Cultic;Selaco;Forgive Me Father;Forgive Me Father 2;Nightmare Reaper;Hedon Bloodrite;Hedon Bloodrite: Maiden of Lust;HROT;Supplice;Wrath: Aeon of Ruin;Nightmare of Decay;Dread Templar;Cruelty Squad;Cruelty Squad: Deluxe;Receiver 2;Teardown;Wobbledogs;Slime Rancher;My Time at Portia;My Time at Sandrock;Coral Island;Dinkum;Palia;Sun Haven;Roots of Pacha;Graveyard Keeper;Travellers Rest;Potion Permit;Moonstone Island;Fields of Mistria;Eastward;Eastward: Octopia;Dredge: The Iron Rig;Cult of the Lamb;Cult of the Lamb: Heretic Pack;Have a Nice Death;Nobody Saves the World;Death Must Die;Astral Ascent;Skul: The Hero Slayer;Curse of the Dead Gods;Warm Snow;The Rogue Prince of Persia;Wizard with a Gun;Curse of the Deadwood;Trinity Fusion;Ring of Pain;One Step From Eden;Vault of the Void;Roguebook;Gordian Quest;Across the Grooves;Nitro Kid;Alina of the Arena;Beneath Apple Manor;Chrono Ark;Dungeon Drafters;Astrea: Six-Sided Oracles;Cobalt Core;Monster Sanctuary;Coromon;Cassette Beasts;Temtem;Nexomon: Extinction;Monster Crown;Disc Creatures;Siralim Ultimate;Crystal Project;Monster Hunter Stories 2;Digimon Story: Cyber Sleuth;Digimon Story: Hacker's Memory;Digimon Survive;Digimon World: Next Order;World of Final Fantasy;The Last Spell;Fae Tactics;Fell Seal: Arbiter's Mark;Symphony of War: The Nephilim Saga;Troubleshooter: Abandoned Children;Horizon's Gate;Bug Fables: The Everlasting Sapling;Paper Mario: The Thousand-Year Door;CrossCode;Unsighted;Hyper Light Breaker;Hob;Hob: Definitive Edition;Evoland;Evoland 2;The Swords of Ditto;Bastion;Transistor;Pyre;Afterimage;Elderand;Vigil: The Longest Night;Lil Gator Game;TOEM;Alba: A Wildlife Adventure;Chicory: A Colorful Tale;Wuppo;The Wild at Heart;Yonder: The Cloud Catcher Chronicles;Hoa;The Last Campfire;Roki;Lost in Random;Figment;Figment 2: Creed Valley;Omno;The Pathless;Arise: A Simple Story;Seasons after Fall;Child of Light;Trine: Ultimate Collection;Unruly Heroes;Spiritfarer;Neva;Planet of Lana;Somerville;Bramble: The Mountain King;Brothers: A Tale of Two Sons;Valiant Hearts: The Great War;Valiant Hearts: Coming Home;Never Alone;Never Alone 2;Lost Ember;The First Tree;Shape of the World;RiME;The Gardens Between;Gorogoa;Monument Valley: Panoramic Edition;Monument Valley 2: Panoramic Edition;Assemble with Care;Florence;Dordogne;A Memoir Blue;Before Your Eyes;Venba;Later Alligator;Mutazione;Beacon Pines;Strange Horticulture;Strange Antiquities;Wytchwood;Potion Craft;Bear and Breakfast;Lemon Cake;Winkeltje: The Little Shop;Kynseed;Garden Story;Forager;Nova Lands;Cuisineer;Mail Time;Smushi Come Home;Here Comes Niko!;Frog Detective;Frog Detective 2;Frog Detective 3;Carto;The Spirit and the Mouse;Button City;Teacup;Pikuniku;Donut County;Katamari Damacy REROLL;We Love Katamari REROLL;Lunistice;Mail Mole;Kao the Kangaroo;Kao the Kangaroo: Round 2;Pumpkin Jack;Demon Turf;Demon Turf: Trials;Sonic Adventure DX;Sonic Lost World;Sonic & All-Stars Racing Transformed;Team Sonic Racing;Sonic Robo Blast 2;Freedom Planet;Freedom Planet 2;Spark the Electric Jester;Spark the Electric Jester 2;Spark the Electric Jester 3;Penny's Big Breakaway;New Super Lucky's Tale;Super Lucky's Tale;Poi;Snake Pass;Pseudoregalia;Cavern of Dreams;Corn Kidz 64;Frogun;Frogun Encore;Toree 3D;Toree 2;Toree Jailed;Super Kiwi 64;Yellow Taxi Goes Vroom;Tinykin;Blue Fire;Blue Fire: Void Maker;Dandara: Trials of Fear Edition;Yoku's Island Express;Monster Boy and the Cursed Kingdom;Wonder Boy: The Dragon's Trap;Wonder Boy: Asha in Monster World;Monster World IV;Aggelos;Aggelos 2;Alwa's Awakening;Alwa's Legacy;Infernax;Vernal Edge;Islets;Pronty;Minoria;Record of Lodoss War: Deedlit in Wonder Labyrinth;Touhou Luna Nights;Momodora: Reverie Under the Moonlight;Momodora: Moonlit Farewell;Timespinner 2;La-Mulana;La-Mulana 2;Environmental Station Alpha;Cathedral;Astalon: Tears of the Earth;Panzer Paladin;Cyber Shadow;Bushiden;Lone Fungus;Lone Fungus: Dreams of the Void;Biomorph;BioGun;Cookie Cutter;Doomblade;Depths of Sanity;Zapling Bygone;Ghost Song;Batbarian: Testament of the Primordials;Cathedral 3-D;Shantae and the Pirate's Curse;Shantae: Half-Genie Hero;Shantae and the Seven Sirens;Shantae: Risky's Revenge;Mighty Switch Force! Collection;Gato Roboto;Minit;Minit Fun Racer;Carrion: The Old Ones;They Bleed Pixels;Furi;Furi: One More Fight;Ape Out;Disc Room;Nuclear Blaze;Downwell;Bleed;Bleed 2;Bleed 3;Gunpoint;Heat Signature;Titan Souls;Unsouled;Phoenotopia: Awakening;Unsung Hero;Blossom Tales;Blossom Tales II;Oceanhorn: Monster of Uncharted Seas;Oceanhorn 2: Knights of the Lost Realm;Sparklite;Arboria;Arboria: The Forgotten Lands;Dreamscaper;Revita;Revita: Overclocked;GetsuFumaDen: Undying Moon;GetsuFumaDen: Undying Moon - Wave of Calamity;Rogue Lords;Colt Canyon;Colt Canyon 2;West of Dead;West of Dead: Path of the Crow;Othercide;Darkest Dungeon: The Crimson Court;Darkest Dungeon: The Color of Madness;Iratus: Lord of the Dead;Iratus: Wrath of the Necromancer;For the King;For the King II;Crown Trick;Void Tyrant;Neoverse;Monster Train 2;Dicefolk;Card Crawl;Card Crawl Adventure;Card Thief;Meteorfall: Journeys;Meteorfall: Krumit's Tale;Tamarak Trail;Shogun Showdown;Balatro: Friends of Jimbo;Stacklands;Stacklands: Cursed Worlds;Loop Hero: Endless Journey;Dome Keeper: Assorted Allies;Wall World: Deep Dive;Yet Another Zombie Survivors;Death Must Die: Arena;Boneraiser Minions;Boneraiser Minions: Viscerant;Army of Ruin;Nordic Ashes;Nordic Ashes: Survivors of Ragnarok;Time Survivors;Time Survivors: The Last Stand;Spellbook Demonslayers;Spellbook Demonslayers: Prologue;Yet Another Fantasy Title;Rogue: Genesia;God of Weapons;God of Weapons: The Depths;Death or Treat;Death or Treat: Wicked World;Spirit Hunters: Infinite Horde;Spirit Hunters: Infinite Horde - The Last Spirit;Scarlet Tower;Holocure - Save the Fans!;Halls of Torment: The Forsaken Mines;Void Scrappers;Void Scrappers: The Deep;Disfigure;Disfigure: Prologue;Galactic Glitch;Void War;Slime 3K: Rise Against Despot;Deathless: Tales of Spire;The Last Flame;SpellRogue;Dice & Fold;Dungeon Clawler;Backpack Hero: Dawn of Dusk;Cobalt Core: Tides;Slay the Spire 2;Pony Island;Pony Island 2: Panda Circus;The Hex;Dungeons & Degenerate Gamblers;Card Shark;Cardpocalypse;Card City Nights;Card City Nights 2;Faeria;Eternal Card Game;Shadowverse;Yu-Gi-Oh! Master Duel;Magic: The Gathering Arena;Legends of Runeterra;Inscryption: Kaycee's Mod;Gwent: The Witcher Card Game;Thronebreaker: The Witcher Tales;The Talos Principle 2;The Turing Test;The Entropy Centre;Viewfinder;Antichamber;The Swapper;Q.U.B.E.;Q.U.B.E. 2;The Room;The Room Two;The Room Three;The Room 4: Old Sins;The Room VR: A Dark Matter;Myst;Riven;Obduction;Firmament;Quern - Undying Thoughts;The Eyes of Ara;The House of Da Vinci;The House of Da Vinci 2;The House of Da Vinci 3;The House of Da Vinci VR;Machinika Museum;Machinika: Atlas;Boxes: Lost Fragments;Escape Simulator 2;We Were Here Expeditions: The FriendShip;The Watchers;Unsolved Case;Escape Memoirs: Mini Stories;Escape Memoirs: Mansion of Pains;The Backrooms: Escape Together;Escape the Backrooms;Backrooms: The Project;Inside the Backrooms;Backrooms Rec.;The Complex: Found Footage;The Backrooms 1998;Liminalcore;Anemoiapolis;Pools;Dreamcore;The Exit 8;Platform 8;Shinkansen 0;Station 5;The Closing Shift;Night Delivery;Parasocial;Fears to Fathom: Home Alone;Fears to Fathom: Norwood Hitchhike;Fears to Fathom: Carson House;Fears to Fathom: Ironbark Lookout;Fears to Fathom: Woodbury Getaway;Amanda the Adventurer;Amanda the Adventurer 2;Nun Massacre;Bloodwash;Murder House;Stay Out of the House;Night of the Consumers;The Convenience Store;The Radio Station;The Night Shift;Aka Manto;Hanako;The Bathhouse;Stigmatized Property;Missing Children;The Caregiver;The Horror of Salazar House;The Glass Staircase;Conscript;Hollow Cocoon;Lamentum;No One Lives Under the Lighthouse;Fatum Betula;Paratopic;Lost in Vivo;Dead End Road;Anatomy;The Shopping List;The VHS Collection;The Heilwald Loophole;IMSCARED;Spooky's Jump Scare Mansion;Spooky's Jump Scare Mansion: HD Renovation;Dread X Collection;Dread X Collection 2;Dread X Collection 3;Dread X Collection 4;Dread X Collection 5;Dread X Collection: The Hunt;The Cat Lady;Downfall;Lorelai;The Coma;White Day 2;Song of Horror: Episode 5;Them and Us: Nightmare;Echoes of the Living;Penumbra: Overture;Penumbra: Black Plague;Penumbra: Requiem;Frictional Collection;MADiSON VR;P.T. Emulation;Evil Inside;Evil Inside Part 2;Remothered: Aged Rose;Home Sweet Home EP2;The Beast Inside;Silver Chains;Those Who Remain;Maid of Sker;Maid of Sker: The Haunting;Observer;Layers of Fear 2023;Blair Witch VR;The Park;Kholat;Kona;Kona II: Brume;The Shore;Transient;Transient: Extended Edition;Lovecraft's Untold Stories;Lovecraft's Untold Stories 2;Stygian: Reign of the Old Ones;Vomitoreum;Fashion Police Squad;Impaler;Chop Goblins;Maximum Action;Post Void;Devil Daggers;Hyper Demon;Golden Light;Northern Journey;Dread Delusion;Lunacid;Hands of Necromancy;Hands of Necromancy II;Cultic: Interlude;Fortune's Run;Arthurian Legends;Beyond Sunset;Deadlink;Blood: Fresh Supply;Blood II: The Chosen;Shadow Warrior Classic Redux;Duke Nukem 3D: 20th Anniversary World Tour;Duke Nukem Forever;Serious Sam Classic: The First Encounter;Serious Sam Classic: The Second Encounter;Serious Sam HD: The First Encounter;Serious Sam HD: The Second Encounter;Serious Sam 2;Serious Sam 3: BFE;Serious Sam: Siberian Mayhem;Painkiller;Painkiller: Black Edition;Painkiller: Hell & Damnation;Hard Reset;Hard Reset: Exile;NecroVision;NecroVision: Lost Company;Clive Barker's Jericho;Condemned 2;Dark Messiah of Might and Magic;Hexen;Hexen II;Heretic: Shadow of the Serpent Riders;Heretic II;Strife: Veteran Edition;Blood West;Blood West: Dead Man's Promise;The Long Dark: Tales from the Far Territory;The Long Dark: Wintermute;The Flame in the Flood;This War of Mine: Final Cut;Sheltered;Sheltered 2;Endzone: A World Apart;Endzone 2;Floodland;Stranded: Alien Dawn;Green Hell VR;Starsand;Volcanoids;Breathedge;Breathedge 2;Deliver Us The Moon;Deliver Us Mars;Deliver Us Home;Adrift;Observation;Tacoma;The Station;Event[0];Stories Untold;Moons of Madness;Moons of Madness: The Lost Station;Genesis Alpha One;Genesis Noir;The Invincible;Fort Solis;The Signifier;The Signifier: Director's Cut;The Forgotten City;Paradise Killer;The Case of the Golden Idol;The Rise of the Golden Idol;Pentiment;Shadows of Doubt;The Painscreek Killings;The Infectious Madness of Doctor Dekker;Immortality;Contradiction: Spot the Liar;The Shapeshifting Detective;Dark Nights with Poe and Munro;The Centennial Case: A Shijima Story;The 7th Guest;The 7th Guest VR;The 13th Doll;Who Pressed Mute on Uncle Marcus?;The Isle Tide Hotel;Ten Dates;Five Dates;Bloodshore;Night Book;The Gallery - Episode 1;The Gallery - Episode 2;Erica;Late Shift;The Bunker;Not For Broadcast;Not For Broadcast: VR;Orwell: Keeping an Eye on You;Orwell: Ignorance is Strength;Papers, Please;Beholder;Beholder 2;Beholder 3;This Is the Police;This Is the Police 2;Rebel Cops;Yes, Your Grace;The Life and Suffering of Sir Brante;Roadwarden;Citizen Sleeper;Citizen Sleeper 2: Starward Vector";
+addNamed(NAMED_RAW2);
+const NAMED_RAW3="Silent Hill 3;Silent Hill 4: The Room;Silent Hill: Origins;Silent Hill: Homecoming;Silent Hill: Downpour;Silent Hill: Shattered Memories;Silent Hill: Book of Memories;Resident Evil 3: Nemesis;Resident Evil Code: Veronica;Resident Evil Outbreak;Resident Evil Outbreak: File #2;Resident Evil Survivor;Resident Evil Survivor 2;Resident Evil: Dead Aim;Resident Evil: The Umbrella Chronicles;Resident Evil: The Darkside Chronicles;Resident Evil: Operation Raccoon City;Resident Evil: Gaiden;Resident Evil: The Mercenaries 3D;Dino Crisis;Dino Crisis 2;Dino Crisis 3;Dino Stalker;Haunting Ground;Clock Tower;Clock Tower 2;Clock Tower 3;Rule of Rose;Kuon;Siren;Siren 2;Siren: Blood Curse;Forbidden Siren;Fatal Frame;Fatal Frame II: Crimson Butterfly;Fatal Frame III: The Tormented;Fatal Frame IV: Mask of the Lunar Eclipse;Fatal Frame: Maiden of Black Water;Alone in the Dark 2;Alone in the Dark 3;Alone in the Dark: The New Nightmare;Alone in the Dark 2008;Alone in the Dark: Illumination;Eternal Darkness: Sanity's Requiem;Obscure;Obscure II;Clock Tower: The First Fear;Clock Tower: Ghost Head;Sweet Home;Splatterhouse;Splatterhouse 2;Splatterhouse 3;Splatterhouse 2010;The House of the Dead;The House of the Dead 2;The House of the Dead III;The House of the Dead 4;The House of the Dead: Scarlet Dawn;The House of the Dead: Overkill;The House of the Dead: Remake;Typing of the Dead;Typing of the Dead: Overkill;Corpse Party;Corpse Party: Book of Shadows;Corpse Party: Blood Drive;Corpse Party 2: Dead Patient;Mad Father;Misao;Ib;Ao Oni;Yume Nikki;Angels of Death;Witch's House;Witch's Heart;Ao Oni 3;Ao Oni 2;Pocket Mirror;Mermaid Swamp;The Crooked Man;The Sandman;The Boogie Man;The Hanged Man;Paranoiac;OFF;Lisa: The Painful;Lisa: The Joyful;Fear & Hunger;Fear & Hunger 2: Termina;Yuppie Psycho;The Witch's House MV;Hello Charlotte EP1;Hello Charlotte EP2;Hello Charlotte EP3;Hello Charlotte EP4;Doki Doki Literature Club;Doki Doki Literature Club Plus!;Milk inside a bag of milk inside a bag of milk;Cooking Companions;Buddy Simulator 1984;Spooky's House of Jump Scares;SCP: Containment Breach;SCP: 5K;SCP: Unity;SCP: Pandemic;SCP: Blackout;SCP: Nine-Tailed Fox;SCP: Observer;SCP: Descent;SCP: Labrat;Slender: The Eight Pages;Slender: The Arrival;Slender: The Arrival VR;Slender Man's Shadow;Five Nights at Freddy's World;Five Nights at Freddy's: Sister Location;Freddy Fazbear's Pizzeria Simulator;Ultimate Custom Night;Five Nights at Freddy's: Help Wanted 2;Five Nights at Freddy's AR: Special Delivery;Five Nights at Freddy's: Into the Pit;Five Nights at Freddy's: Secret of the Mimic;Freddy in Space 2;Security Breach: Ruin;Five Nights at Candy's;Five Nights at Candy's 2;Five Nights at Candy's 3;The Joy of Creation;The Joy of Creation: Story Mode;One Night at Flumpty's;One Night at Flumpty's 2;Popgoes;Those Nights at Rachel's;Poppy Playtime: Chapter 4;Poppy Playtime: Chapter 5;Garten of Banban 2;Garten of Banban 3;Garten of Banban 4;Garten of Banban 5;Indigo Park;My Friendly Neighborhood;Baldi's Basics Classic;Baldi's Basics Plus;Hello Neighbor;Hello Neighbor 2;Hello Neighbor: Hide and Seek;Secret Neighbor;Mr. Hopp's Playhouse;Mr. Hopp's Playhouse 2;Dark Deception;Dark Deception: Monsters & Mortals;Ghostwire: Tokyo;Ghost of a Tale;Ghost Trick: Phantom Detective;Uncharted: Drake's Fortune;Uncharted 2: Among Thieves;Uncharted 3: Drake's Deception;Uncharted 4: A Thief's End;Uncharted: The Lost Legacy;The Order: 1886;Until Dawn;Bloodborne;Demon's Souls;The Last Guardian;Shadow of the Colossus;ICO;Gravity Rush;Gravity Rush 2;Infamous;Infamous 2;Infamous: Second Son;Killzone;Killzone 2;Killzone 3;Resistance: Fall of Man;Resistance 2;Resistance 3;Ratchet & Clank 2;Ratchet & Clank 3;Ratchet: Deadlocked;Ratchet & Clank Future: Tools of Destruction;Ratchet & Clank: Into the Nexus;Jak and Daxter;Jak II;Jak 3;Jak X: Combat Racing;Sly Cooper;Sly 2: Band of Thieves;Sly 3: Honor Among Thieves;The Last of Us: Left Behind;God of War II;God of War III;God of War: Ascension;God of War: Chains of Olympus;God of War: Ghost of Sparta;Metal Gear Solid;Metal Gear Solid 2: Sons of Liberty;Metal Gear Solid 3: Snake Eater;Metal Gear Solid 4: Guns of the Patriots;Metal Gear Solid: Peace Walker;Metal Gear;Metal Gear 2: Solid Snake;Metal Gear Survive;Castlevania: Symphony of the Night;Castlevania: Aria of Sorrow;Castlevania: Dawn of Sorrow;Castlevania: Portrait of Ruin;Castlevania: Order of Ecclesia;Castlevania: Harmony of Dissonance;Castlevania: Circle of the Moon;Castlevania: Bloodlines;Castlevania: Rondo of Blood;Castlevania: Lords of Shadow;Castlevania: Lords of Shadow 2;Castlevania: Mirror of Fate;Castlevania: Harmony of Despair;Contra;Contra III: The Alien Wars;Contra: Hard Corps;Contra: Shattered Soldier;Contra 4;Contra: Operation Galuga;Metal Slug;Metal Slug 2;Metal Slug 3;Metal Slug 4;Metal Slug 5;Metal Slug 6;Metal Slug 7;Metal Slug Tactics;The King of Fighters '98;The King of Fighters 2002;The King of Fighters XV;Street Fighter II;Street Fighter Alpha;Street Fighter Alpha 2;Street Fighter Alpha 3;Street Fighter III: 3rd Strike;Street Fighter IV;Street Fighter X Tekken;Tekken;Tekken 2;Tekken 3;Tekken 4;Tekken 5;Tekken 6;Tekken Tag Tournament;Tekken Tag Tournament 2;Soulcalibur;Soulcalibur II;Soulcalibur III;Soulcalibur IV;Soulcalibur V;Virtua Fighter;Virtua Fighter 2;Virtua Fighter 4;Virtua Fighter 5;Dead or Alive;Dead or Alive 2;Dead or Alive 3;Dead or Alive 4;Dead or Alive 5;Killer Instinct 2;Killer Instinct Gold;Mortal Kombat;Mortal Kombat II;Mortal Kombat 3;Mortal Kombat 4;Mortal Kombat: Deadly Alliance;Mortal Kombat: Deception;Mortal Kombat: Armageddon;Mortal Kombat vs. DC Universe;Mortal Kombat X;Mortal Kombat: Shaolin Monks;Injustice: Gods Among Us;Marvel vs. Capcom;Marvel vs. Capcom 2;Marvel vs. Capcom 3;Marvel vs. Capcom: Infinite;Dragon Ball Z: Budokai;Dragon Ball Z: Budokai 2;Dragon Ball Z: Budokai 3;Dragon Ball Z: Budokai Tenkaichi;Dragon Ball Z: Budokai Tenkaichi 2;Dragon Ball Z: Budokai Tenkaichi 3;Dragon Ball Z: Burst Limit;Naruto: Ultimate Ninja;Naruto: Ultimate Ninja 2;Naruto: Ultimate Ninja 3;Naruto: Ultimate Ninja 4;Naruto: Ultimate Ninja 5;Naruto: Rise of a Ninja;Naruto: The Broken Bond;Naruto: Path of the Ninja;Naruto: Path of the Ninja 2;One Piece: Grand Battle;One Piece: Grand Adventure;One Piece: Unlimited Adventure;One Piece: Unlimited Cruise;One Piece: Pirate Warriors;One Piece: Pirate Warriors 2;One Piece: Pirate Warriors 3;Bleach: Blade Battlers;Bleach: Soul Resurrección;Bleach: Shattered Blade;My Hero One's Justice;Demon Slayer: Sweep the Board!;One Punch Man: A Hero Nobody Knows;Pokémon Red;Pokémon Blue;Pokémon Yellow;Pokémon Gold;Pokémon Silver;Pokémon Crystal;Pokémon Ruby;Pokémon Sapphire;Pokémon Emerald;Pokémon FireRed;Pokémon LeafGreen;Pokémon Diamond;Pokémon Pearl;Pokémon Platinum;Pokémon HeartGold;Pokémon SoulSilver;Pokémon Black;Pokémon White;Pokémon Black 2;Pokémon White 2;Pokémon X;Pokémon Y;Pokémon Omega Ruby;Pokémon Alpha Sapphire;Pokémon Sun;Pokémon Moon;Pokémon Ultra Sun;Pokémon Ultra Moon;Pokémon Sword;Pokémon Shield;Pokémon Brilliant Diamond;Pokémon Shining Pearl;Pokémon Legends: Arceus;Pokémon Scarlet;Pokémon Violet;Pokémon Let's Go, Pikachu!;Pokémon Let's Go, Eevee!;Pokémon Mystery Dungeon: Red Rescue Team;Pokémon Mystery Dungeon: Explorers of Time;Pokémon Mystery Dungeon: Explorers of Sky;Pokémon Mystery Dungeon: Gates to Infinity;Pokémon Mystery Dungeon: Super Mystery Dungeon;Pokémon Mystery Dungeon: Rescue Team DX;Pokémon Ranger;Pokémon Ranger: Shadows of Almia;Pokémon Snap;New Pokémon Snap;Pokémon Stadium;Pokémon Stadium 2;Pokémon Colosseum;Pokémon XD: Gale of Darkness;Pokémon Battle Revolution;Pokémon Unite;Pokémon Café ReMix;Pokémon Quest;Pokémon Masters EX;Pokémon Rumble;Pokémon Conquest;Pokémon Pinball;Pokémon Puzzle League;Pokémon Shuffle;Pokémon Detective Pikachu;Detective Pikachu Returns;Pokémon Channel;Pokémon Home;Pokémon Trading Card Game;Super Mario Bros.;Super Mario Bros. 2;Super Mario Bros. 3;Super Mario World;Super Mario World 2: Yoshi's Island;Super Mario 64;Super Mario Sunshine;Super Mario Galaxy;Super Mario Galaxy 2;Super Mario 3D Land;Super Mario 3D World;Super Mario Odyssey;Super Mario Wonder;Super Mario Maker;Super Mario Maker 2;Mario Kart 64;Mario Kart: Double Dash!!;Mario Kart DS;Mario Kart Wii;Mario Kart 8;Mario Kart 8 Deluxe;Mario Kart Tour;Mario Party;Mario Party 2;Mario Party 4;Mario Party 8;Mario Party 9;Mario Party 10;Super Mario Party;Super Mario Party Jamboree;Mario & Luigi: Superstar Saga;Mario & Luigi: Partners in Time;Mario & Luigi: Bowser's Inside Story;Mario & Luigi: Dream Team;Mario & Luigi: Paper Jam;Mario & Luigi: Brothership;Paper Mario;Super Paper Mario;Paper Mario: Sticker Star;Paper Mario: Color Splash;Paper Mario: The Origami King;Mario vs. Donkey Kong;Donkey Kong Country;Donkey Kong Country 2;Donkey Kong Country 3;Donkey Kong 64;Donkey Kong Country Returns;Donkey Kong Country: Tropical Freeze;Luigi's Mansion;Luigi's Mansion 2;Luigi's Mansion 3;Yoshi's Story;Yoshi's Woolly World;Yoshi's Crafted World;Captain Toad: Treasure Tracker;Princess Peach: Showtime!;Wario Land;WarioWare, Inc.;WarioWare: Twisted!;WarioWare: Get It Together!;WarioWare: Move It!;Kirby's Dream Land;Kirby's Adventure;Kirby Super Star;Kirby 64: The Crystal Shards;Kirby: Nightmare in Dream Land;Kirby & the Amazing Mirror;Kirby: Squeak Squad;Kirby's Return to Dream Land;Kirby: Planet Robobot;Kirby Star Allies;Kirby and the Forgotten Land;Metroid;Metroid II: Return of Samus;Super Metroid;Metroid Fusion;Metroid: Zero Mission;Metroid Prime;Metroid Prime 2: Echoes;Metroid Prime 3: Corruption;Metroid Prime Remastered;Metroid Dread;Star Fox;Star Fox 64;Star Fox Adventures;Star Fox Assault;F-Zero;F-Zero X;F-Zero GX;F-Zero 99;Pikmin;Pikmin 2;Pikmin 3;Pikmin 4;Splatoon;Splatoon 2;Splatoon 3;ARMS;Zelda II: The Adventure of Link;A Link to the Past;Link's Awakening;Ocarina of Time;Majora's Mask;Oracle of Ages;Oracle of Seasons;Four Swords;The Wind Waker;Four Swords Adventures;Twilight Princess;Phantom Hourglass;Spirit Tracks;Skyward Sword;A Link Between Worlds;Tri Force Heroes;Breath of the Wild;Tears of the Kingdom;Echoes of Wisdom;Hyrule Warriors;Hyrule Warriors: Age of Calamity;Cadence of Hyrule;Mario + Rabbids Kingdom Battle;Mario + Rabbids Sparks of Hope;Xenoblade Chronicles;Xenoblade Chronicles X;Xenoblade Chronicles 2;Xenoblade Chronicles 3;Fire Emblem: Shadow Dragon;Fire Emblem Awakening;Fire Emblem Fates: Birthright;Fire Emblem Echoes: Shadows of Valentia;Fire Emblem: Three Houses;Fire Emblem Engage;Fire Emblem Warriors;Advance Wars;Advance Wars 2;Golden Sun;Golden Sun: The Lost Age;EarthBound;Mother 3;Xenogears;Xenosaga Episode I;Chrono Cross;Final Fantasy VI;Final Fantasy VIII;Final Fantasy X;Final Fantasy XI;Final Fantasy XII;Final Fantasy Tactics;Final Fantasy Tactics Advance;Final Fantasy Type-0;Final Fantasy Crystal Chronicles;Bravely Default;Bravely Second: End Layer;SaGa Frontier;SaGa Frontier 2;Romancing SaGa 2;Romancing SaGa 3;Star Ocean;Star Ocean: Second Story;Star Ocean: Till the End of Time;Star Ocean: The Last Hope;Valkyrie Profile;Valkyrie Profile 2;Valkyrie Elysium;Radiant Historia;Shin Megami Tensei;Shin Megami Tensei II;Shin Megami Tensei III: Nocturne;Shin Megami Tensei IV;Shin Megami Tensei IV: Apocalypse;Shin Megami Tensei V;Persona;Persona 2: Innocent Sin;Persona 3;Persona 3 FES;Persona 4;Persona 4 Arena;Persona Q;Persona Q2;Devil Summoner: Soul Hackers;Soul Hackers 2;Devil Survivor;Devil Survivor 2;Digital Devil Saga;Digital Devil Saga 2;Raidou Kuzunoha vs. The Soulless Army;Catherine;Catherine: Full Body;Etrian Odyssey;Etrian Odyssey IV;Dragon Quest;Dragon Quest II;Dragon Quest III;Dragon Quest IV;Dragon Quest V;Dragon Quest VI;Dragon Quest VII;Dragon Quest VIII;Dragon Quest IX;Dragon Quest X;Dragon Quest Monsters;Dragon Quest Heroes;Dragon Quest Heroes II;Ni no Kuni;Ni no Kuni II;Tales of Phantasia;Tales of Destiny;Tales of Eternia;Tales of Symphonia;Tales of Legendia;Tales of the Abyss;Tales of Vesperia;Tales of Graces;Tales of Xillia;Tales of Xillia 2;Ys I;Ys II;Ys III: Wanderers from Ys;Ys IV: Mask of the Sun;Ys V;Ys VI: The Ark of Napishtim;Ys Origin;Ys Seven;Trails in the Sky FC;Trails in the Sky SC;Trails from Zero;Trails to Azure;Gurumin: A Monstrous Adventure;Xanadu Next;Kingdom Hearts;Kingdom Hearts II;Kingdom Hearts: Birth by Sleep;Kingdom Hearts: Dream Drop Distance;Kingdom Hearts: Chain of Memories;Kingdom Hearts: Melody of Memory;Nier;Nier Gestalt;Drakengard;Drakengard 2;Drakengard 3;The World Ends with You;Neo: The World Ends with You;Tactics Ogre;Ogre Battle;Ogre Battle 64;Disgaea;Disgaea 2;Disgaea 3;Disgaea 4;Phantom Brave;Makai Kingdom;Soul Nomad & the World Eaters;The Caligula Effect;Monark;Blue Reflection;Blue Reflection: Second Light;Atelier Sophie;Atelier Firis;Atelier Lydie & Suelle;Atelier Ayesha;Atelier Escha & Logy;Atelier Shallie;Atelier Meruru;Atelier Totori;Atelier Rorona;Atelier Lulua;Fairy Fencer F;Neptunia Re;Birth1;Megadimension Neptunia VII;Mary Skelter: Nightmares;Death end re;Quest;Nights of Azure;Ar tonelico;Lost Dimension;Crystar;Tokyo Mirage Sessions ♯FE;The Alliance Alive;Utawarerumono: Mask of Deception;Utawarerumono: Mask of Truth;Phoenix Wright: Ace Attorney - Justice for All;Phoenix Wright: Ace Attorney - Trials and Tribulations;Miles Edgeworth: Investigations;Ace Attorney Investigations 2;Professor Layton and the Curious Village;Professor Layton and the Diabolical Box;Professor Layton and the Unwound Future;Professor Layton and the Last Specter;Professor Layton and the Miracle Mask;Professor Layton and the Azran Legacy;Professor Layton vs. Phoenix Wright;Hotel Dusk: Room 215;Another Code: Two Memories;999: Nine Hours, Nine Persons, Nine Doors;Virtue's Last Reward;Zero Time Dilemma;Paranormasight: The Seven Mysteries of Honjo;Master Detective Archives: Rain Code;Danganronpa Another Episode;Ultra Despair Girls;Root Letter;Root Film;428: Shibuya Scramble;Ever17;Remember11;The House in Fata Morgana;Steins;Gate;Steins;Gate 0;Chaos;Head;Chaos;Child;Robotics;Notes;Anonymous;Code;Occultic;Nine;Muv-Luv;Muv-Luv Alternative;Clannad;Little Busters!;Kanon;Air;Angel Beats!;Saya no Uta;Katawa Shoujo;Necrobarista;Eliza;The Red Strings Club;Backbone;NORCO;Batman: The Telltale Series;Minecraft: Story Mode;The Secret of Monkey Island;Monkey Island 2;The Curse of Monkey Island;Escape from Monkey Island;Sam & Max Hit the Road;Day of the Tentacle;Full Throttle;Grim Fandango;Broken Sword;Broken Sword II;Broken Sword 5;Syberia;Syberia II;Syberia 3;The Longest Journey;Dreamfall Chapters;Samorost;Samorost 2;Samorost 3;Botanicula;Chuchel;Pilgrims;Creaks;Deponia;Chaos on Deponia;Goodbye Deponia;Edna & Harvey: The Breakout;The Book of Unwritten Tales;Black Mirror;Still Life;The Dig;Indiana Jones and the Fate of Atlantis;Thimbleweed Park;The Excavation of Hob's Barrow;The Roottrees Are Dead;Contradiction;The Complex;As Dusk Falls;Man of Medan;Little Hope;House of Ashes;The Devil in Me;Hidden Agenda;Fahrenheit: Indigo Prophecy;Grand Theft Auto;Grand Theft Auto 2;Grand Theft Auto: Liberty City Stories;Grand Theft Auto: Vice City Stories;Grand Theft Auto: Chinatown Wars;Red Dead Revolver;Bully;Manhunt;Manhunt 2;Midnight Club: Street Racing;Midnight Club II;Midnight Club: Los Angeles;The Warriors;Driver;Driver 2;Driver 3;Driver: Parallel Lines;Driver: San Francisco;Splinter Cell;Splinter Cell: Pandora Tomorrow;Splinter Cell: Chaos Theory;Splinter Cell: Double Agent;Splinter Cell: Conviction;Splinter Cell: Blacklist;Prince of Persia: Warrior Within;Prince of Persia: The Two Thrones;Prince of Persia: The Forgotten Sands;Prince of Persia 2008;Beyond Good & Evil;Rayman;Rayman 2;Rayman 3;Rayman Raving Rabbids;Far Cry;Far Cry 3: Blood Dragon;Assassin's Creed;Assassin's Creed Liberation;Assassin's Creed Rogue;Assassin's Creed Syndicate;Ghost Recon;Ghost Recon 2;Ghost Recon Advanced Warfighter;Ghost Recon Advanced Warfighter 2;Ghost Recon Future Soldier;Rainbow Six;Rainbow Six 3;Rainbow Six: Vegas;Rainbow Six: Vegas 2;The Division;The Division 2;The Crew;Need for Speed;Need for Speed II;Need for Speed: High Stakes;Need for Speed: Porsche Unleashed;Need for Speed: Underground;Need for Speed: Underground 2;Need for Speed: Most Wanted 2005;Need for Speed: Carbon;Need for Speed: ProStreet;Need for Speed: Undercover;Need for Speed: Shift;Need for Speed: Shift 2;Need for Speed: The Run;Need for Speed: Most Wanted 2012;Need for Speed Rivals;Need for Speed 2015;Burnout;Burnout 2: Point of Impact;Burnout 3: Takedown;Burnout Revenge;Burnout Paradise;Split/Second;Blur;MotorStorm;Driveclub;Gran Turismo;Gran Turismo 2;Gran Turismo 3;Gran Turismo 4;Gran Turismo 5;Gran Turismo 6;Gran Turismo Sport;Gran Turismo 7;Forza Motorsport 2;Forza Motorsport 3;Forza Motorsport 4;Forza Motorsport 5;Forza Motorsport 6;Forza Horizon;Forza Horizon 2;Forza Horizon 3;Project Gotham Racing;Project Gotham Racing 2;Project Gotham Racing 3;Project Gotham Racing 4;Test Drive Unlimited;Test Drive Unlimited 2;FlatOut;FlatOut 2;FlatOut: Ultimate Carnage;Destruction AllStars;Trackmania Turbo;Absolute Drift;Dakar Desert Rally;WRC 10;WRC Generations;DiRT;DiRT 2;DiRT 3;Grid;Grid 2;Grid Autosport;F1 2010;F1 2011;F1 2012;F1 2013;F1 2014;F1 2015;F1 2016;F1 2017;F1 2018;F1 2019;F1 2020;MotoGP 13;MotoGP 19;MotoGP 20;MotoGP 21;MotoGP 22;MotoGP 23;Ride;Ride 2;Ride 3;TT Isle of Man;MXGP;MXGP Pro;Monster Energy Supercross;Trials Evolution;Trials Fusion;Trials HD;Euro Truck Simulator;German Truck Simulator;Scania Truck Driving Simulator;Bus Simulator 16;Fernbus Simulator;OMSI;OMSI 2;Train Valley;Train Valley 2;Cities in Motion;SimCity;SimCity 2000;SimCity 3000;SimCity 4;Spore;SimAnt;SimTower;Theme Hospital;Theme Park;RollerCoaster Tycoon;RollerCoaster Tycoon 2;RollerCoaster Tycoon 3;Zoo Tycoon;Zoo Tycoon 2;Jurassic Park: Operation Genesis;Parkitect;Megaquarium;Project Hospital;Evil Genius;Evil Genius 2;Dungeon Keeper;Dungeons 2;Dungeons 3;Tropico;Tropico 2;Tropico 3;Tropico 4;Anno 1404;Anno 2070;Civilization II;Civilization III;Alpha Centauri;Beyond Earth;Europa Universalis II;Europa Universalis III;Hearts of Iron;Hearts of Iron II;Hearts of Iron III;Victoria;Victoria II;Victoria 3;Crusader Kings;Crusader Kings II;Imperator: Rome;Total War: Shogun;Medieval: Total War;Rome: Total War;Medieval II: Total War;Empire: Total War;Napoleon: Total War;Warhammer 40,000: Dawn of War;Dawn of War: Winter Assault;Dawn of War: Dark Crusade;Dawn of War II;Dawn of War III;Company of Heroes: Opposing Fronts;Men of War;Men of War: Red Tide;Call to Arms;Wargame: European Escalation;Wargame: Red Dragon;Broken Arrow;Supreme Commander;Supreme Commander: Forged Alliance;Total Annihilation;Planetary Annihilation;Beyond All Reason;StarCraft;StarCraft: Brood War;StarCraft II: Wings of Liberty;StarCraft II: Heart of the Swarm;Warcraft: Orcs & Humans;Warcraft II;Command & Conquer;Command & Conquer: Red Alert;Red Alert 2;Red Alert 3;Tiberian Sun;C&C Generals;C&C Generals: Zero Hour;C&C 3: Tiberium Wars;Age of Empires;Age of Mythology;Rise of Legends;Empire Earth;Empire Earth II;Stronghold;Stronghold Crusader;Stronghold 2;Knights of Honor;The Settlers;The Settlers II;The Settlers III;The Settlers IV;Anno 1602;Anno 1503;Anno 1701;Caesar III;Caesar IV;Pharaoh;Zeus: Master of Olympus;Emperor: Rise of the Middle Kingdom;Children of the Nile;Grand Ages: Rome;Patrician III;Patrician IV;Port Royale;Port Royale 2;Port Royale 3;Port Royale 4;Sid Meier's Pirates!;Railroad Tycoon;Railroad Tycoon 2;Transport Tycoon Deluxe;Opus Magnum;SpaceChem;Shenzhen I/O;TIS-100;EXAPUNKS;7 Billion Humans;Human Resource Machine;EVE Online;X: Beyond the Frontier;X2: The Threat;X3: Reunion;Starpoint Gemini;Starpoint Gemini 2;Homeworld 2;Homeworld: Deserts of Kharak;Descent;Descent II;Freespace;Freespace 2;Star Wars: X-Wing;Star Wars: TIE Fighter;Star Wars: X-Wing vs. TIE Fighter;Star Wars: Battlefront 2004;Star Wars: Battlefront II 2005;Star Wars: Jedi Knight;Star Wars: Jedi Knight II;Star Wars: Jedi Academy;Star Wars: The Force Unleashed II;Star Wars: Empire at War;Star Wars: Racer;Star Wars: Dark Forces;Star Wars: Dark Forces II;Star Wars: Shadows of the Empire;Star Wars: Obi-Wan;Star Wars: Bounty Hunter;Star Wars: Galaxy of Heroes;Star Wars: Hunters;Star Wars: Galactic Battlegrounds;Halo: Combat Evolved;Halo 2;Halo 3;Halo 3: ODST;Halo: Reach;Halo 4;Halo 5: Guardians;Gears of War;Gears of War 2;Gears of War 3;Gears of War 4;Crackdown;Crackdown 2;Crackdown 3;Bleeding Edge;Minecraft Legends;Trove;Vintage Story;Creativerse;Portal Knights;LEGO Worlds;Poly Bridge;Poly Bridge 2;Bridge Constructor;Bridge Constructor Portal;Octodad: Dadliest Catch;Surgeon Simulator;Surgeon Simulator 2;I Am Bread;Job Simulator;Vacation Simulator;Car Mechanic Simulator;Motorcycle Mechanic Simulator;Gas Station Simulator;Supermarket Simulator;Internet Cafe Simulator;Internet Cafe Simulator 2;Thief Simulator;Thief Simulator 2;Drug Dealer Simulator;Drug Dealer Simulator 2;Police Simulator: Patrol Officers;Firefighting Simulator;Emergency 4;Emergency 5;911 Operator;112 Operator;Not Tonight;Orwell;Afterparty;Tangle Tower;Detective Grimoire;Jenny LeClue;Blacksad: Under the Skin;Agatha Christie: The ABC Murders;Sherlock Holmes: Crimes and Punishments;Sherlock Holmes: The Awakened;Sherlock Holmes: Nemesis;The Testament of Sherlock Holmes;Duck Detective: The Secret Salami;Another Code: Recollection";
+addNamed(NAMED_RAW3);
+const NAMED_RAW4="60 Seconds!;60 Seconds! Reatomized;60 Parsecs!;80 Days;911 Operator: Search and Rescue;A Blind Legend;A Boy and His Blob;A Building Full of Cats;A Castle Full of Cats;A City Sleeps;A Dance of Fire and Ice;A Dark Room;A Date in the Park;A Day in the Woods;A Detective's Story;A Game About Digging a Hole;A Game of Thrones: The Board Game;A Good Snowman Is Hard to Build;A House of Many Doors;A Juggler's Tale;A Little to the Left;A Monster's Expedition;A Mortician's Tale;A Normal Lost Phone;A Raven Monologue;A Story About My Uncle;A Tale of Two Kingdoms;A Tower Full of Cats;A Wizard's Lizard;AER: Memories of Old;Aaero;Abandon Ship;Ace of Spades;Ace of Spades Classic;Achtung Panzer: Kharkov 1943;Act of Aggression;Act of War: Direct Action;Act of War: High Treason;Action Taimanin;Adam Wolfe;Adios;Adore;Advent Rising;Adventure Capitalist;Adventure Time: Finn & Jake Investigations;Adventures of Shuggy;Aegis Defenders;Aeon of Sands: The Trail;Aer: First Breath;Aftercharge;Afterfall: Insanity;Afterlife Empire;Age of Booty;Age of Darkness: Final Stand;Age of Empires Online;Age of Empires: Castle Siege;Age of Mythology: Tale of the Dragon;Age of Wonders;Age of Wonders II: The Wizard's Throne;Age of Wonders III;Age of Wonders: Planetfall;Agent Intercept;Agony;Agony UNRATED;Aground;AI War: Fleet Command;AI War 2;Air Conflicts: Secret Wars;Air Conflicts: Vietnam;Airport Madness 3D;Airport Madness 3D: Volume 2;Alchemy Garden;Alekhine's Gun;Alien Breed 2: Assault;Alien Breed 3: Descent;Alien Breed: Impact;Alien: Isolation - The Collection;Alien Rage;Alien Swarm;Alien Swarm: Reactive Drop;Alien Shooter;Alien Shooter 2;Alien Shooter 2: Reloaded;Alien Shooter 2: Vengeance;Alien Shooter: Vengeance;Alien Spidy;Alien Syndrome;Alien vs. Predator;Aliens: Colonial Marines;Aliens: Infestation;Aliens: Marines;Aliens versus Predator Classic 2000;Aliens versus Predator 2;Alice: Madness Returns;Alice's Mom's Rescue;Alice VR;Alien Hominid HD;All Walls Must Fall;Along the Edge;Alpha Protocol;Among the Sleep;Anachronox;Ancestors Legacy;And Yet It Moves;Anodyne;Anodyne 2: Return to Dust;Another Sight;Apex Construct;Apico;Apotheon;Apple Knight;Aragami;Aragami 2;Arcade Paradise;Arcana Heart 3 LOVE MAX!!!!!;Archvale;Arclight Cascade;Arma: Cold War Assault;Arma 2;Arma 2: Operation Arrowhead;Armello;Armikrog;Army Men: RTS;Army of Two: The 40th Day;Artifact;Ash of Gods: Redemption;Ashwalkers;Assault Android Cactus;AssaultCube;Astral Chain;At Dead of Night;Atom Zombie Smasher;Atom RPG;Atom RPG: Trudograd;Aztez;Baby Storm;Bad Rats;Bad Rats: The Rats' Revenge;Bad Rats Show;BalanCity;Baldur's Gate;Baldur's Gate II: Shadows of Amn;Baldur's Gate: Dark Alliance;Ballhalla;Batman: Arkham VR;Battle Chasers: Nightwar;Battle Chef Brigade;Battle for Wesnoth;Battle Realms;Battle Realms: Winter of the Wolf;Battlefield 1942;Battlefield 2;Battlefield 2142;Battlefield Bad Company 2;Battlestar Galactica Deadlock;Bear With Me;Beat Saber;Ben and Ed;Beyond Contact;Beyond Eyes;Binary Domain;Bio Inc. Redemption;BioShock Remastered;BioShock 2 Remastered;Biomutant;Biped;Black Book;Black Mesa;Black Skylands;Black The Fall;Black & White;Black & White 2;Black Geyser: Couriers of Darkness;Black Future '88;Black Ice;Black Mesa: Blue Shift;Blackguards;Blackguards 2;Bleep Bloop;Blind;Blood;BloodRayne;BloodRayne 2;Bloodstained: Curse of the Moon;Bloodstained: Curse of the Moon 2;Bloons TD 5;Blue Estate;Bob Was Hungry;Bomb Rush Cyberfunk;Bomber Crew;Bombshell;Boneworks;Book of Demons;Book of Travels;Boring Man;Bounty Train;BoxBoy!;BrainBread;BrainBread 2;Brass Brigade;Breach & Clear;Breach & Clear: Deadline;Break the Game;Bridge Constructor: The Walking Dead;Brigador;Brigador: Up-armored Edition;Bright Memory;Bright Memory: Infinite;Broken Age;Broken Sword: The Shadow of the Templars;Broken Sword II: The Smoking Mirror;Broken Sword III: The Sleeping Dragon;Broken Sword 4: The Angel of Death;Broken Sword 5: The Serpent's Curse;Business Tour;Button Button Up!;Call of Duty;Call of Duty 2;Call of Duty: World at War;Call of Duty: Modern Warfare 2;Call of Duty: Black Ops;Call of Duty: Modern Warfare 3;Call of Duty: Black Ops 4;Call of Duty: Black Ops 7;Call of Juarez;Call of Juarez: Bound in Blood;Call of Juarez: Gunslinger;Call of Juarez: The Cartel;Caladrius Blaze;Caliber;Cally's Caves;Cally's Caves 2;Cally's Caves 3;Cally's Trials;Capcom Arcade Stadium;Car Mechanic Simulator 2015;CarX Drift Racing Online;CarX Street;Cat Quest;Cat Quest II;Cat Quest III;Catherine Classic;Cave Story+;Chernobylite;Chivalry: Medieval Warfare;City Car Driving;City of Brass;Clad in Iron: Gulf of Mexico 1864;Clive 'N' Wrench;Cloudpunk;Clustertruck;Cogmind;Cold Fear;Cold Waters;Colony Survival;Command & Conquer: Tiberian Sun;Command & Conquer: Generals;Commandos: Behind Enemy Lines;Commandos 2: Men of Courage;Commandos 3: Destination Berlin;Conan Chop Chop;Concrete Genie;Construction Simulator 2015;Cook, Serve, Delicious!;Cook, Serve, Delicious! 2!!;Cook, Serve, Delicious! 3?!;Costume Quest;Costume Quest 2;Counter-Strike;Counter-Strike: Condition Zero;Counter-Strike: Source;Counter-Strike: Global Offensive;Craft The World;Crayon Physics Deluxe;Creeper World;Creeper World 2;Creeper World 3: Arc Eternal;Creeper World 4;Crying Suns;Curse of the Sea Rats;Cyber Hook;Cyber Manhunt;Dandara;Dark Devotion;Dark Sector;Dark Souls: Prepare to Die Edition;Darwin Project;Deadlight;Deadlight: Director's Cut;Death and Taxes;Deep Sky Derelicts;Deep Rock Galactic: Rogue Core;DemonCrawl;Demon's Tilt;Desperados: Wanted Dead or Alive;Desperados 2: Cooper's Revenge;Devilated;Devil's Hunt;Dino D-Day;Dirt Showdown;Divinity: Dragon Commander;Divinity II: Developer's Cut;Doom II;Doom 64;Doom 3: BFG Edition;Doom 2016;Doom + Doom II;Door Kickers;Door Kickers 2: Task Force North;Double Dragon Neon;Dragon's Lair;Dragon's Lair II: Time Warp;Dragon's Crown;Drake Hollow;Drawful 2;Dread Hunger;Dream Daddy;Dungeon Defenders;Dungeon Defenders II;Duskers;Dustforce;Dynasty Warriors 8: Xtreme Legends;E.Y.E: Divine Cybermancy;Earth Defense Force 4.1;Earth Defense Force 5;Earth Defense Force 6;Earth Defense Force: World Brothers;Earth Defense Force: Iron Rain;Earth 2150;Earth 2160;Earth 2140;Easy Red 2;Echo;Echo Generation;Edge of Eternity;Eldest Souls;Emily Is Away;Emily Is Away Too;Emily Is Away <3;Endless Sky;Enderal: Forgotten Stories;Endling: Extinction Is Forever;Enter the Matrix;Esports Life Tycoon;Europa Universalis V;Everhood;Everhood 2;Evil Genius 2: World Domination;Exanima;Expeditions: Conquistador;Expeditions: Viking;Expeditions: Rome;F.E.A.R. 2: Project Origin;F.E.A.R. Extraction Point;F.E.A.R. Perseus Mandate;Fallout;Fallout 2;Fallout Tactics;Farlight 84;Faster Than Light;Fear Effect Sedna;Fe;Feist;Final Fantasy III;Final Fantasy IV;Final Fantasy V;Final Fantasy XV Windows Edition;Final Fantasy Type-0 HD;Fistful of Frags;FlatOut 3: Chaos & Destruction;FlatOut 4: Total Insanity;Flintlock: The Siege of Dawn;Football Manager 2020;Football Manager 2021;Football Manager 2026;Fury Unleashed;Gabble;Gabriel Knight: Sins of the Fathers;Gabriel Knight 2: The Beast Within;Gabriel Knight 3: Blood of the Sacred, Blood of the Damned;Galactic Civilizations;Galactic Civilizations II;Galactic Civilizations III;Galactic Civilizations IV;Game Dev Tycoon;GameGuru;Generation Zero;Giants: Citizen Kabuto;Gloomhaven;Gloomwood;Gods Will Be Watching;Good Company;Guild Wars;Guilty Gear Xrd -SIGN-;Guilty Gear Xrd REV 2;Guns, Gore & Cannoli;Guns, Gore & Cannoli 2;Half-Life: Opposing Force;Half-Life: Blue Shift;Half-Life 2: Episode One;Half-Life 2: Episode Two;Half-Life: Source;Halo: Combat Evolved Anniversary;Halo 2: Anniversary;Halo 5: Forge;Hand of Fate;Hand of Fate 2;Hatred;Haven;Hellblade II: Senua's Saga;Helltaker;Heroes of Might and Magic III;Heroes of Might and Magic IV;Heroes of Might and Magic V;Heroes of Might and Magic VI;Heroes of Might and Magic VII;Heroes of Might and Magic: Olden Era;Hexen: Beyond Heretic;HighFleet;Hitman: Codename 47;Hitman 2: Silent Assassin;Hitman: Contracts;Hitman: World of Assassination;Homefront;Homefront: The Revolution;Hypnospace Outlaw;I Have No Mouth, and I Must Scream;I Am Alive;I Am Fish;I Expect You To Die;I Expect You To Die 2;I Expect You To Die 3;Iconoclasts;Immortal Redneck;Immortals Fenyx Rising;Imperium Galactica;Imperium Galactica II;In Stars and Time;In Sound Mind;In Verbis Virtus;Indivisible;Industry Giant 2;Infested Planet;Inferno Climber;Insurgency;Iron Harvest;Isaac: Rebirth;Jagged Alliance;Jagged Alliance 2;Jagged Alliance 3;Jalopy;Jotun;Journey to the Savage Planet;Just Cause;Just Shapes & Beats;Just Die Already;Kathy Rain;Kenshi;Kingdom: Classic;Kingdom: New Lands;Kingdom Two Crowns;Kingdoms of Amalur: Reckoning;King of Fighters XIII;King of Fighters XIV;Klonoa Phantasy Reverie Series;Labyrinth City;Lake;Lara Croft and the Guardian of Light;Lara Croft and the Temple of Osiris;LEGO Batman: The Videogame;LEGO Batman 2: DC Super Heroes;LEGO Marvel Super Heroes 2;LEGO Star Wars: The Complete Saga;LEGO Star Wars: The Force Awakens;LEGO Pirates of the Caribbean;Let It Die;Library of Ruina;Little Nightmares III;Lost Planet;Lost Planet 2;Lost Planet 3;Lost Ruins;Lost Soul Aside;Lovely Planet;Lovely Planet 2: April Skies;Lucius;Lucius II;Lucius III;Mars: War Logs;Magicka;Magicka 2;Maneater;Mega Man 11;Mega Man Legacy Collection;Mega Man Legacy Collection 2;Mega Man X Legacy Collection;Mega Man X Legacy Collection 2;Mega Man Battle Network Legacy Collection;Melvor Idle;Metro 2033;Metro: Last Light;Metro Exodus Enhanced Edition;Might & Magic Heroes VII;Might & Magic X: Legacy;Mirror's Edge;Mirror's Edge Catalyst;Misery;Mo Astray;Monaco;Mother Russia Bleeds;Mount & Blade;Mr. Shifty;Mullet MadJack;Murdered: Soul Suspect;My Friend Pedro;My Summer Car;Myst III: Exile;Myst IV: Revelation;Myst V: End of Ages;N++;Need for Speed II SE;Neverwinter Nights;Neverwinter Nights 2;Nex Machina;Nioh: Complete Edition;Nioh 2: The Complete Edition;No More Heroes 3;Oddworld: New 'n' Tasty!;Oddworld: Soulstorm;Oddworld: Stranger's Wrath HD;One Finger Death Punch;One Finger Death Punch 2;Orcs Must Die!;Orcs Must Die! 2;Overgrowth;Overlord;Overlord II;Pacific Drive;Party Hard;Party Hard 2;Payday: The Heist;Peggle;Peggle Nights;Pinball FX;Postal;Postal 2;Postal III;Postal 4: No Regerts;Prey 2017;Prince of Persia;Project CARS;Puyo Puyo Tetris;Puyo Puyo Tetris 2;Quake;Quake II;Quake III Arena;Quake 4;Raji: An Ancient Epic;Rapture Rejects;Ravenfield;Rec Room;Red Faction;Red Faction II;Red Faction: Guerrilla Re-Mars-tered;Red Faction: Armageddon;Red Solstice;Red Solstice 2: Survivors;Resident Evil 2 Remake;Resident Evil 3 Remake;Resident Evil 4 Remake;Resident Evil Operation Raccoon City;Reventure;Roboquest;Rock of Ages;Rock of Ages 2;Rock of Ages 3;Ronin;Ruiner;Saints Row 2022;Sam & Max Beyond Time and Space;Sam & Max: The Devil's Playhouse;Scribblenauts Unlimited;Scribblenauts Unmasked;Second Extinction;Secret of Monkey Island: Special Edition;Serious Sam: The First Encounter;Serious Sam: The Second Encounter;Shadow Warrior Classic;Shadow Tactics: Aiko's Choice;Shadowrun Returns;Shank;Shank 2;Sid Meier's Civilization;Sid Meier's Civilization II;Sid Meier's Civilization III;SimCity 2013;Slay the Princess;Sloclap's Absolver;Sniper Elite V2;Sniper Elite: Resistance;Sniper Ghost Warrior;Sniper Ghost Warrior 2;South Park: The Stick of Truth;South Park: The Fractured but Whole;Space Haven;SpongeBob SquarePants: Battle for Bikini Bottom - Rehydrated;Star Wars Jedi Knight: Dark Forces II;Star Wars Jedi Knight II: Jedi Outcast;Star Wars Jedi Knight: Jedi Academy;Star Wars: Empire at War - Forces of Corruption;Starship Troopers: Extermination;State of Decay 3;Still Wakes the Deep;Strange Brigade;Subnautica 2;Super Hexagon;Superhot;Superhot VR;Tales of Zestiria;The Darkness II;The Darkside Detective;The Darkside Detective: A Fumble in the Dark;The Day Before;The Forgotten Ones;The Friends of Ringo Ishikawa;The Genesis Order;The Good Life;The Incredible Adventures of Van Helsing;The Incredible Adventures of Van Helsing II;The Incredible Adventures of Van Helsing III;The Jackbox Party Pack;The Jackbox Party Pack 2;The Jackbox Party Pack 3;The Jackbox Party Pack 4;The Jackbox Party Pack 5;The Jackbox Party Pack 6;The Jackbox Party Pack 7;The Jackbox Party Pack 8;The Jackbox Party Pack 9;The Jackbox Party Pack 10;The Jackbox Party Pack 11;The Technomancer;The Unfinished Swan;The Universim;The Walking Dead: Season Two;The Walking Dead: Michonne;The Walking Dead: A New Frontier;The Witcher;The Witcher 4;The Wolf Among Us 2;Thief Gold;Thief II: The Metal Age;Thief: Deadly Shadows;Thief 2014;Thomas Was Alone;Tomb Raider II;Tomb Raider III;Tomb Raider IV: The Last Revelation;Tomb Raider V: Chronicles;Tomb Raider: Angel of Darkness;Tomb Raider Legend;Tomb Raider Anniversary;Tomb Raider Underworld;Tomb Raider 2013;Total War: Medieval;Total War: Rome;Total War: Napoleon;TrackMania Nations Forever;TrackMania 2 Stadium;Trine 3: The Artifacts of Power;Trine 4: The Nightmare Prince;Trine 5: A Clockwork Conspiracy;Tropico 2: Pirate Cove;Turnip Boy Commits Tax Evasion;Turnip Boy Robs a Bank;Until We Die;Vanquish;Vagrus: The Riven Realms;Vampire: The Masquerade - Bloodlines;Vampire: The Masquerade - Swansong;Vampire: The Masquerade - Coteries of New York;Vampire: The Masquerade - Shadows of New York;Vermintide;Vermintide 2;Void Bastards;Void Stranger;Void Crew;We Happy Few;Weird West;Wheelman;Wolfenstein 3D;Wolfenstein: Enemy Territory;Wolfenstein: The Old Blood;Wolfenstein: Cyberpilot;World of Warcraft;WRC 7;WRC 8;WRC 9;WWE 2K15;WWE 2K16;WWE 2K17;WWE 2K18;WWE 2K19;WWE 2K20;WWE 2K22;XCOM: Chimera Squad;XCOM: Enemy Within;Xenonauts;Xenonauts 2;Yakuza Kiwami 3;Ys X: Nordics;Zero Escape: Virtue's Last Reward;Zero Escape: Zero Time Dilemma;ZeroRanger;Zombie Army VR;Ziggurat;Ziggurat 2;Zeno Clash;Zeno Clash 2;Zup!;Zup! 2;Zup! 3;Zup! 4;Zup! 5;Zup! 6;Zup! 7;Zup! 8;Zup! 9;Zup! X;20XX;30XX;100% Orange Juice;2064: Read Only Memories;7th Sector;8Doors: Arum's Afterlife Adventure;9 Monkeys of Shaolin;9-Nine;25 to Life;35MM;39 Days to Mars;500 Years Act 1;8-Bit Armies;8-Bit Hordes;8-Bit Invaders;9th Dawn III;A Bastard's Tale;A Bird Story;A Case of Distrust;A Cat in Space;A Castle on the Coast;A Chair in a Room;A Dark Place;A Demon's Game;A Game of Dwarves;A Groundbreaking Adventure;A Hat in Time: Seal the Deal;A Night in the Woods;ABRISS - build to destroy;Abyss Odyssey;Ace of Seafood;Adios Amigos;Against the Moon;Agent A: A puzzle in disguise;Airborne Kingdom;Alchemist Simulator;Alundra;An Airport for Aliens Currently Run by Dogs;Ancient Dungeon;Anima: Gate of Memories;Anima: Gate of Memories - The Nameless Chronicles;Anno Mutationem;Another Crab's Treasure;Arcade Spirits;Arcade Spirits: The New Challengers;Arx Fatalis;At Sundown: Shots in the Dark;Atelier Ryza: Ever Darkness & the Secret Hideout;Atelier Ryza 2: Lost Legends & the Secret Fairy;Atelier Ryza 3: Alchemist of the End & the Secret Key;Autonauts;Backpack Cat;Backpack Twins;Banners of Ruin;Barony;Battle Axe;Battlerite;Battlerite Royale;Beasts of Maravilla Island;Before We Leave;Behind the Frame: The Finest Scenery;Below Zero;Beyond Blue;Biped Robots;Blacktail;Blasphemous: The Stir of Dawn;Bleak Faith: Forsaken;Blightbound;Bonfire Peaks;Bonetown;Book of Hours;Born of Bread;Brawlout;Brewmaster;Brick Rigs;Broforce: Forever;Bulb Boy;Burnhouse Lane;Call of the Sea;Camp Canyonwood;Cat Cafe Manager;Cat Goes Fishing;Catacomb Master;Caveblazers;ChromaGun;Coffee Talk: Episode 2;Conan Unconquered;Contraband Police;Cultist Simulator;Dead Estate;Death Trash;Despot's Game;Digimon Story: Cyber Sleuth - Hacker's Memory;Dwarven Fortress;Eldritch;Everreach: Project Eden;Exoprimal;Fabledom;Fable Anniversary;Fable II;Fable III;Fallout: New Vegas - Ultimate Edition;Fight'N Rage;Filament;Final Profit: A Shop RPG;Firestone Online Idle RPG;Fobia - St. Dinfna Hotel;Founder's Fortune;Foregone;Fobia: St. Dinfna Hotel;Ghostlore;Gnosia;Grime: Colors of Rot;Gunlocked;Hard West;Hard West 2;Haven Park;Heaven's Vault;Homeworld: Emergence;Into the Radius;Into the Radius 2;Itorah;Jupiter Hell;Killer Frequency;Kingdom Rush;Kingdom Rush Frontiers;Kingdom Rush Origins;Kingdom Rush Vengeance;Kingdom Two Crowns: Dead Lands;Last Train Home;Legend of Grimrock;Legend of Grimrock 2;Madness: Project Nexus;MechWarrior Online;Midnight Fight Express;Mini Motor Racing X;Mortal Shell: The Virtuous Cycle;Neon Abyss;Neon White;Nobody Wants to Die;Norland;OneShot: World Machine Edition;Out of Ore;Phantom Brigade;Pizza Tower;Psychopomp;Quasimorph;Ravenous Devils;RoboCop: Rogue City;RoboCop: Rogue City - Unfinished Business";
+addNamed(NAMED_RAW4);
+try{ const raw=localStorage.getItem('imported:v1'); if(raw) addImported(JSON.parse(raw)); }catch(_){}
+document.getElementById('importInput').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return; const cnt=document.getElementById('gameCount'); cnt.textContent='Importing…';
+  const fr=new FileReader();
+  fr.onload=()=>{ try{
+      const {rows,added}=importText(fr.result);
+      try{ localStorage.setItem('imported:v1',JSON.stringify(rows)); }catch(_){}
+      cnt.textContent=`${GAMES.length} titles · ${added} imported`; renderGrid();
+    }catch(err){ cnt.textContent='Could not read that file'; } };
+  fr.readAsText(f); e.target.value='';
+});
+const RES_MULT = {1080:1, 1440:0.68, 2160:0.40};
+const QUAL_MULT = {Low:1.55, Medium:1.2, High:1.0, Ultra:0.78};
+
+// ---------- RENDER GRID ----------
+const grid = document.getElementById('gameGrid');
+document.getElementById('gameCount').textContent = GAMES.length + " titles in our database";
+const mono=n=>n.replace(/[^A-Za-z0-9 ]/g,'').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+let covers={};
+try{ GAMES.forEach(g=>{const v=localStorage.getItem('cover:'+g.id); if(v) covers[g.id]=v;}); }catch(_){}
+function thumbStyle(g){ return covers[g.id] ? `background-image:url("${covers[g.id]}")` : `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),${g.grad[0]}`; }
+function cardHTML(g){
+  return `<div class="grow" data-id="${g.id}"><div class="thumb" style='${thumbStyle(g)}'>${covers[g.id]?'':mono(g.name)}</div><div class="c-title">${g.name}</div><div class="c-genre">${g.genre}</div><div class="mono c-year">${g.year||'—'}</div><div class="mono c-gpu">${g.min.gpu}</div></div>`;
+}
+let shown = 20;
+const moreBtn = document.createElement('button');
+moreBtn.className = 'btn'; moreBtn.style.cssText = 'display:flex;margin:28px auto 0';
+grid.after(moreBtn);
+function renderGrid(){
+  grid.className='glist';
+  grid.innerHTML = '<div class="grow ghead"><span></span><span>Title</span><span class="c-genre">Genre</span><span>Year</span><span class="c-gpu">Min GPU</span></div>' + GAMES.slice(0, shown).map(cardHTML).join('');
+  moreBtn.textContent = `Show ${Math.min(150, GAMES.length-shown)} more (${GAMES.length-shown} remaining)`;
+  moreBtn.style.display = shown >= GAMES.length ? 'none' : 'flex';
+}
+moreBtn.addEventListener('click', ()=>{ shown = Math.min(GAMES.length, shown+150); renderGrid(); });
+renderGrid();
+document.getElementById('stats').innerHTML=`<span><b>${GAMES.length}</b>games</span><span><b>${Object.keys(GPU).length}</b>GPUs</span><span><b>${Object.keys(CPU).length}</b>CPUs</span>`;
+
+// ---------- SEARCH ----------
+const searchInput = document.getElementById('searchInput');
+const suggest = document.getElementById('suggest');
+searchInput.addEventListener('input', ()=>{
+  const q = searchInput.value.trim().toLowerCase();
+  if(!q){suggest.classList.remove('show'); return;}
+  const matches = GAMES.filter(g=>g.name.toLowerCase().includes(q)).slice(0,6);
+  if(!matches.length){suggest.innerHTML=`<div style="padding:14px 16px;color:var(--faint);font-size:13px">No games found</div>`; suggest.classList.add('show'); return;}
+  suggest.innerHTML = matches.map(g=>`<button data-id="${g.id}"><div class="sw" style="background:linear-gradient(135deg,${g.grad[0]},${g.grad[1]})"></div><div><div>${g.name}</div><small>${g.genre} · ${g.year}</small></div></button>`).join('');
+  suggest.classList.add('show');
+});
+suggest.addEventListener('click', e=>{
+  const b = e.target.closest('button[data-id]'); if(!b) return;
+  openModal(b.dataset.id); suggest.classList.remove('show'); searchInput.value='';
+});
+document.addEventListener('click', e=>{ if(!e.target.closest('.searchbox')) suggest.classList.remove('show'); });
+
+grid.addEventListener('click', e=>{
+  const c = e.target.closest('.grow'); if(!c || !c.dataset.id) return; openModal(c.dataset.id);
+});
+
+// ---------- MODAL ----------
+const overlay = document.getElementById('overlay');
+const gpuSel = document.getElementById('gpuSel'), cpuSel = document.getElementById('cpuSel');
+function buildOptions(sel, MAP){
+  const desktop = Object.keys(MAP).filter(k=>MAP[k]!==null && !k.includes('(Laptop)') && !k.startsWith('—')).sort((a,b)=>MAP[a]-MAP[b]);
+  const laptop = Object.keys(MAP).filter(k=>MAP[k]!==null && k.includes('(Laptop)')).sort((a,b)=>MAP[a]-MAP[b]);
+  sel.innerHTML = `<optgroup label="Desktop">${desktop.map(k=>`<option value="${k}">${k}</option>`).join('')}</optgroup>
+    <optgroup label="Laptop">${laptop.map(k=>`<option value="${k}">${k}</option>`).join('')}</optgroup>`;
+}
+buildOptions(gpuSel, GPU); buildOptions(cpuSel, CPU);
+gpuSel.value = "RTX 3060"; cpuSel.value = "Intel i5-12400";
+
+// ---------- COMPARE TOOL ----------
+const cmpGpuA=document.getElementById('cmpGpuA'), cmpGpuB=document.getElementById('cmpGpuB'),
+      cmpCpuA=document.getElementById('cmpCpuA'), cmpCpuB=document.getElementById('cmpCpuB');
+buildOptions(cmpGpuA, GPU); buildOptions(cmpGpuB, GPU); buildOptions(cmpCpuA, CPU); buildOptions(cmpCpuB, CPU);
+cmpGpuA.value="RTX 3060"; cmpGpuB.value="RTX 4070"; cmpCpuA.value="Intel i5-12400"; cmpCpuB.value="Ryzen 7 7800X3D";
+function renderCompare(){
+  const gA=GPU[cmpGpuA.value], gB=GPU[cmpGpuB.value], cA=CPU[cmpCpuA.value], cB=CPU[cmpCpuB.value];
+  const gDiff = Math.round(((gB-gA)/gA)*100), cDiff = Math.round(((cB-cA)/cA)*100);
+  const bar=(v)=>Math.min(100,Math.round((v/130)*100));
+  const row=(label,nameA,nameB,vA,vB,diff)=>`
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--faint);margin-bottom:6px"><span>${label}</span><span class="mono" style="color:${diff>0?'var(--green)':diff<0?'var(--red)':'var(--faint)'}">${diff>0?'+':''}${diff}% ${diff>=0?'B faster':'A faster'}</span></div>
+      <div class="barrow" style="grid-template-columns:110px 1fr 40px"><span style="font-size:12px">${nameA}</span><div class="bartrack"><div class="barfill" style="width:${bar(vA)}%"></div></div><span class="mono" style="font-size:12px">${vA}</span></div>
+      <div class="barrow" style="grid-template-columns:110px 1fr 40px"><span style="font-size:12px">${nameB}</span><div class="bartrack"><div class="barfill" style="width:${bar(vB)}%;background:var(--sub)"></div></div><span class="mono" style="font-size:12px">${vB}</span></div>
+    </div>`;
+  document.getElementById('cmpResult').innerHTML = `<div class="resultbox" style="border-color:var(--line)">
+    ${row('GPU performance score', cmpGpuA.value, cmpGpuB.value, gA, gB, gDiff)}
+    ${row('CPU performance score', cmpCpuA.value, cmpCpuB.value, cA, cB, cDiff)}
+    <div class="subverdict" style="margin-top:4px">Scores are relative synthetic performance indices, not exact benchmark FPS — use them to gauge roughly how much faster one part is than another.</div>
+  </div>`;
+}
+[cmpGpuA,cmpGpuB,cmpCpuA,cmpCpuB].forEach(s=>s.addEventListener('change', renderCompare));
+renderCompare();
+
+let currentGame = null, curRes = 1080, curQual = "High", curUpscale = "Off", curFG = "off";
+document.querySelectorAll('#resPills .pill').forEach(p=>p.addEventListener('click', ()=>{
+  document.querySelectorAll('#resPills .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active'); curRes = parseInt(p.dataset.res);
+}));
+document.querySelectorAll('#qualPills .pill').forEach(p=>p.addEventListener('click', ()=>{
+  document.querySelectorAll('#qualPills .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active'); curQual = p.dataset.q;
+}));
+document.querySelectorAll('#upscalePills .pill').forEach(p=>p.addEventListener('click', ()=>{
+  document.querySelectorAll('#upscalePills .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active'); curUpscale = p.dataset.u;
+}));
+document.querySelectorAll('#fgPills .pill').forEach(p=>p.addEventListener('click', ()=>{
+  document.querySelectorAll('#fgPills .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active'); curFG = p.dataset.fg;
+}));
+
+function paintHead(){
+  const cv=covers[currentGame.id], h=document.getElementById('mhead');
+  h.style.background = cv ? `linear-gradient(rgba(13,14,17,.1),rgba(13,14,17,.88)),url("${cv}") center/cover` : `linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),${currentGame.grad[0]}`;
+}
+document.getElementById('coverInput').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f||!currentGame) return; const id=currentGame.id;
+  const fr=new FileReader();
+  fr.onload=()=>{const im=new Image(); im.onload=()=>{const w=Math.min(900,im.width),h=Math.round(im.height*w/im.width),c=document.createElement('canvas'); c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
+    covers[id]=c.toDataURL('image/jpeg',.82); try{localStorage.setItem('cover:'+id,covers[id]);}catch(_){} renderGrid(); paintHead();}; im.src=fr.result;};
+  fr.readAsDataURL(f); e.target.value='';
+});
+function openModal(id){
+  currentGame = GAMES.find(g=>g.id===id);
+  paintHead();
+  document.getElementById('estNote').textContent = currentGame.est ? 'Requirements for this title are approximate, based on its hardware class — check the publisher\'s store page for official specs.' : '';
+  document.getElementById('mTitle').textContent = currentGame.name;
+  document.getElementById('mMeta').textContent = currentGame.genre + (currentGame.year ? ' · ' + currentGame.year : '');
+  const minFPS = Math.round(fpsAt(currentGame, currentGame.minScore, currentGame.minScore*0.9, currentGame.min.ram, 1080, 'Low').fps);
+  const recFPS = Math.round(fpsAt(currentGame, currentGame.recScore, currentGame.recScore*0.9, currentGame.rec.ram, 1080, 'High').fps);
+  document.getElementById('minCard').innerHTML = `<h4>MINIMUM</h4>` + reqRows(currentGame.min, minFPS, 'Low');
+  document.getElementById('recCard').innerHTML = `<h4>RECOMMENDED</h4>` + reqRows(currentGame.rec, recFPS, 'High');
+  document.getElementById('resultSlot').innerHTML = '';
+  const banner=document.getElementById('pcFitBanner');
+  if(PROFILE){
+    const f=computeFit(PROFILE,currentGame);
+    banner.innerHTML = `<div class="resultbox ${f.tierClass}" style="margin-top:16px"><div class="verdict"><span class="dot ${f.tierClass}"></span>${f.emoji} Can Your PC Run This? — ${f.tier}</div><div class="subverdict">Modeled ${f.lo}–${f.hi} FPS at 1080p ${f.qual} on your saved ${PROFILE.gpu} / ${PROFILE.cpu}</div><div class="bottleneck">⚠️ ${f.bottleneck}</div></div>`;
+    gpuSel.value=PROFILE.gpu; cpuSel.value=PROFILE.cpu; document.getElementById('ramSel').value=String(PROFILE.ram);
+  } else { banner.innerHTML=''; }
+  switchTab('reqs');
+  overlay.classList.add('show');
+}
+function fpsRange(fps){ fps=Math.max(1,fps); return [Math.max(1,Math.round(fps*0.87)), Math.round(fps*1.13)]; }
+function reqRows(r, fps, preset){
+  const [lo,hi]=fpsRange(fps);
+  return `<div class="reqrow"><span class="k">GPU</span><span class="v">${r.gpu}</span></div>
+  <div class="reqrow"><span class="k">CPU</span><span class="v">${r.cpu}</span></div>
+  <div class="reqrow"><span class="k">RAM</span><span class="v">${r.ram} GB</span></div>
+  <div class="reqrow"><span class="k">Storage</span><span class="v">${r.storage}</span></div>
+  <div class="reqrow"><span class="k">Est. FPS</span><span class="v mono" style="color:var(--violet);font-weight:700">${lo}–${hi} FPS <span style="color:var(--faint);font-weight:400">(1080p ${preset}, modeled)</span></span></div>`;
+}
+document.getElementById('closeBtn').addEventListener('click', ()=>overlay.classList.remove('show'));
+overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.classList.remove('show'); });
+
+document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click', ()=>switchTab(b.dataset.tab)));
+function switchTab(t){
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
+  document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('active', p.id==='tab-'+t));
+}
+
+// ---------- FPS ENGINE ----------
+const UPSCALE_MULT = {Off:1, Quality:1.28, Balanced:1.48, Performance:1.75};
+function fpsAt(g, gpuScore, cpuScore, ram, res, qual, upscale){
+  const up = upscale ? UPSCALE_MULT[upscale] : 1;
+  const gpuFPS = g.refFPS * Math.pow(gpuScore/50, 0.82) * RES_MULT[res] * QUAL_MULT[qual] * up;
+  const cpuCap = g.refFPS * Math.pow(cpuScore/50, 0.75) * QUAL_MULT[qual] * (1/(1-g.cpuWeight*0.35));
+  let fps = Math.min(gpuFPS, cpuCap);
+  if(ram < g.rec.ram) fps *= 0.85;
+  if(ram < g.min.ram) fps *= 0.7;
+  return {fps, gpuFPS, cpuCap};
+}
+
+// ---------- MY PC PROFILE ----------
+let PROFILE=null;
+try{ const raw=localStorage.getItem('mypc:v1'); if(raw) PROFILE=JSON.parse(raw); }catch(_){}
+function saveProfile(p){ PROFILE=p; try{localStorage.setItem('mypc:v1',JSON.stringify(p));}catch(_){} renderMyPC(); renderWCR(); }
+function resetProfile(){ PROFILE=null; try{localStorage.removeItem('mypc:v1');}catch(_){} renderMyPC(); renderWCR(); }
+function computeFit(p, g){
+  const gpuScore=GPU[p.gpu]||30, cpuScore=CPU[p.cpu]||30, ram=p.ram||8;
+  let tier='Difficult', tierClass='bad', emoji='🟠';
+  if(gpuScore>=g.recScore*1.15 && cpuScore>=g.recScore*0.85 && ram>=g.rec.ram){ tier='Excellent'; tierClass='ok'; emoji='🟢'; }
+  else if(gpuScore>=g.recScore && cpuScore>=g.recScore*0.75 && ram>=g.rec.ram){ tier='Playable'; tierClass='ok'; emoji='🟢'; }
+  else if(gpuScore>=g.minScore && cpuScore>=g.minScore*0.75 && ram>=g.min.ram){ tier='Playable (reduced settings)'; tierClass='warn'; emoji='🟡'; }
+  else if(gpuScore>=g.minScore*0.7){ tier='Difficult'; tierClass='warn'; emoji='🟠'; }
+  else { tier='Not recommended'; tierClass='bad'; emoji='🔴'; }
+  const qual = tierClass==='ok'&&gpuScore>=g.recScore*1.15 ? 'High' : tierClass==='ok' ? 'High' : tierClass==='warn'&&tier.includes('Playable')?'Medium':'Low';
+  const {fps,gpuFPS,cpuCap}=fpsAt(g,gpuScore,cpuScore,ram,1080,qual,'Off');
+  const [lo,hi]=fpsRange(fps);
+  const gpuBound=gpuFPS<=cpuCap;
+  const vramNote = p.vram && p.vram < Math.max(4,Math.round(g.recScore/8)) ? ' VRAM may also be a limiting factor at higher settings.' : '';
+  const bottleneck = gpuBound ? `Your GPU (${p.gpu}) is the likely limit.${vramNote}` : `Your CPU (${p.cpu}) is the likely limit.${vramNote}`;
+  let upgrade=null;
+  if(tierClass!=='ok'){
+    upgrade = gpuBound ? {part:'GPU', from:p.gpu} : {part:'CPU', from:p.cpu};
+  }
+  return {tier,tierClass,emoji,lo,hi,qual,bottleneck,upgrade};
+}
+// -- hardware picker state & helpers (used by the My PC form) --
+let pfState={gpu:null,cpu:null,form:'Desktop',openPicker:null,mfr:{cpu:'',gpu:''}};
+function hwRecents(kind){ try{ return JSON.parse(localStorage.getItem('hwRecents:'+kind)||'[]'); }catch(_){ return []; } }
+function pushRecent(kind,name){ let r=hwRecents(kind).filter(x=>x!==name); r.unshift(name); try{localStorage.setItem('hwRecents:'+kind,JSON.stringify(r.slice(0,5)));}catch(_){} }
+function pfOptRow(kind,name,score){
+  const t=tierOf(score);
+  return `<div class="pf-opt" data-pick="${name}" style="padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line)">
+    <span style="font-size:13.5px">${name}</span><span class="mono" style="font-size:11px;color:var(--faint)">${t.name}</span></div>`;
+}
+function renderPfResults(kind){
+  const DB=kind==='gpu'?GPU:CPU, isLaptop=k=>/\(Laptop\)/.test(k), form=pfState.form;
+  let keys=Object.keys(DB).filter(k=>form==='Laptop'?isLaptop(k):!isLaptop(k));
+  const q=(document.getElementById('pfSearch-'+kind)?.value||'').toLowerCase();
+  const mfrs=[...new Set(keys.map(k=>hwMfr(k,kind)))].sort();
+  const mfrBar=document.getElementById('pfMfr-'+kind);
+  if(mfrBar && !mfrBar.dataset.built){ mfrBar.dataset.built='1';
+    mfrBar.innerHTML=`<div class="pill ${!pfState.mfr[kind]?'active':''}" data-m="">All</div>`+mfrs.map(m=>`<div class="pill ${pfState.mfr[kind]===m?'active':''}" data-m="${m}">${m}</div>`).join('');
+    mfrBar.querySelectorAll('[data-m]').forEach(b=>b.addEventListener('click',()=>{ pfState.mfr[kind]=b.dataset.m; mfrBar.querySelectorAll('[data-m]').forEach(x=>x.classList.toggle('active',x===b)); renderPfResults(kind); }));
+  }
+  if(q) keys=keys.filter(k=>k.toLowerCase().includes(q));
+  if(pfState.mfr[kind]) keys=keys.filter(k=>hwMfr(k,kind)===pfState.mfr[kind]);
+  keys.sort((a,b)=>DB[b]-DB[a]);
+  const recents=hwRecents(kind).filter(k=>keys.includes(k));
+  let html='';
+  if(!q && recents.length) html+=`<div style="padding:7px 12px;font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em">Recently selected</div>`+recents.map(k=>pfOptRow(kind,k,DB[k])).join('');
+  if(!q && !pfState.mfr[kind]) html+=`<div style="padding:7px 12px;font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em">Popular</div>`+keys.slice(0,6).map(k=>pfOptRow(kind,k,DB[k])).join('');
+  const groups={}; keys.forEach(k=>{const m=hwMfr(k,kind);(groups[m]=groups[m]||[]).push(k);});
+  Object.keys(groups).sort().forEach(m=>{ html+=`<div style="padding:7px 12px;font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;border-top:1px solid var(--line)">${m}</div>`+groups[m].map(k=>pfOptRow(kind,k,DB[k])).join(''); });
+  const resEl=document.getElementById('pfResults-'+kind);
+  resEl.innerHTML=html||'<div style="padding:16px;color:var(--faint)">No matches</div>';
+  resEl.querySelectorAll('[data-pick]').forEach(r=>r.addEventListener('click',()=>{ pfState[kind]=r.dataset.pick; pushRecent(kind,r.dataset.pick); pfState.openPicker=null; renderProfileEditor(existingProfileBeingEdited); }));
+}
+function pfCardHTML(kind){
+  const icon=kind==='cpu'?'🧠':'🎮', label=kind==='cpu'?'PROCESSOR (CPU)':'GRAPHICS CARD (GPU)', val=pfState[kind];
+  const open=pfState.openPicker===kind;
+  return `<div class="reqcard" style="border:1px solid var(--line)">
+    <h4>${icon} ${label}</h4>
+    <div style="font-size:15.5px;font-weight:600;margin:6px 0 14px;min-height:20px">${val?val:'<span style="color:var(--faint);font-weight:400">Not selected</span>'}</div>
+    <button class="btn" type="button" data-pf-open="${kind}">${val?'Change':'Select'} ${kind==='cpu'?'CPU':'GPU'}</button>
+    ${open?`<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+      <input type="text" id="pfSearch-${kind}" placeholder="Search ${kind==='cpu'?'CPU':'GPU'}…" style="width:100%;padding:9px 12px;border-radius:3px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-family:inherit;margin-bottom:10px">
+      <div class="pillrow" id="pfMfr-${kind}" style="margin-bottom:10px"></div>
+      <div id="pfResults-${kind}" style="max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:3px"></div>
+    </div>`:''}
+  </div>`;
+}
+let existingProfileBeingEdited=null;
+function renderProfileEditor(existing){
+  existingProfileBeingEdited=existing;
+  const o=existing||{};
+  const el=document.getElementById('mypcCard');
+  el.innerHTML=`<div class="reqcard" style="margin-bottom:16px">
+    <h4>WHAT TYPE OF COMPUTER DO YOU HAVE?</h4>
+    <div class="pillrow"><div class="pill ${pfState.form==='Desktop'?'active':''}" data-pf-form="Desktop">🖥️ Desktop PC</div><div class="pill ${pfState.form==='Laptop'?'active':''}" data-pf-form="Laptop">💻 Laptop</div></div>
+  </div>
+  <div class="reqgrid" style="margin-bottom:16px">${pfCardHTML('cpu')}${pfCardHTML('gpu')}</div>
+  <div class="reqcard">
+    <h4>REST OF YOUR SPEC</h4>
+    <div class="formgrid">
+      <div class="field"><label>RAM amount</label><select id="pfRam">${[4,8,12,16,24,32,48,64,96,128].map(v=>`<option value="${v}" ${v==o.ram?'selected':''}>${v} GB</option>`).join('')}</select></div>
+      <div class="field"><label>RAM type</label><select id="pfRamType">${['DDR3','DDR4','DDR5'].map(v=>`<option ${v===o.ramType?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="field"><label>Storage type</label><select id="pfStoreType">${['HDD','SATA SSD','NVMe SSD'].map(v=>`<option ${v===o.storageType?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="field"><label>Storage capacity</label><select id="pfStoreGB">${[256,512,1000,2000,4000].map(v=>`<option value="${v}" ${v==o.storageGB?'selected':''}>${v>=1000?(v/1000)+' TB':v+' GB'}</option>`).join('')}</select></div>
+      <div class="field"><label>GPU VRAM (GB)</label><select id="pfVram">${[2,4,6,8,10,12,16,20,24,32].map(v=>`<option value="${v}" ${v==o.vram?'selected':''}>${v} GB</option>`).join('')}</select></div>
+      <div class="field"><label>Screen resolution <span style="color:var(--faint)">(optional)</span></label><select id="pfRes"><option value="">—</option>${[1080,1440,2160].map(v=>`<option value="${v}" ${v==o.res?'selected':''}>${v}p</option>`).join('')}</select></div>
+      <div class="field"><label>Refresh rate <span style="color:var(--faint)">(optional)</span></label><select id="pfHz"><option value="">—</option>${[60,75,120,144,165,240,360].map(v=>`<option value="${v}" ${v==o.hz?'selected':''}>${v} Hz</option>`).join('')}</select></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px"><button class="btn btn-primary" id="pfSave" ${(!pfState.gpu||!pfState.cpu)?'disabled':''}>Save PC profile</button>${existing?'<button class="btn" id="pfCancel">Cancel</button>':''}</div>
+    ${(!pfState.gpu||!pfState.cpu)?'<div class="subverdict" style="margin-top:10px">Select both a CPU and a GPU above to save.</div>':''}
+  </div>`;
+  el.querySelectorAll('[data-pf-form]').forEach(b=>b.addEventListener('click',()=>{ pfState.form=b.dataset.pfForm; pfState.gpu=null; pfState.cpu=null; pfState.openPicker=null; renderProfileEditor(existing); }));
+  el.querySelectorAll('[data-pf-open]').forEach(b=>b.addEventListener('click',()=>{ pfState.openPicker = pfState.openPicker===b.dataset.pfOpen ? null : b.dataset.pfOpen; renderProfileEditor(existing); }));
+  if(pfState.openPicker){ renderPfResults(pfState.openPicker); document.getElementById('pfSearch-'+pfState.openPicker).addEventListener('input',()=>renderPfResults(pfState.openPicker)); }
+  const save=document.getElementById('pfSave');
+  if(save) save.addEventListener('click', ()=>{
+    saveProfile({gpu:pfState.gpu, cpu:pfState.cpu, formFactor:pfState.form,
+      ram:+document.getElementById('pfRam').value, ramType:document.getElementById('pfRamType').value,
+      storageType:document.getElementById('pfStoreType').value, storageGB:+document.getElementById('pfStoreGB').value,
+      vram:+document.getElementById('pfVram').value, res:document.getElementById('pfRes').value, hz:document.getElementById('pfHz').value});
+  });
+  const c=document.getElementById('pfCancel'); if(c) c.addEventListener('click', ()=>renderMyPC());
+}
+function profileFormHTML(existing){ const o=existing||{}; pfState={gpu:o.gpu||null,cpu:o.cpu||null,form:o.formFactor||'Desktop',openPicker:null,mfr:{cpu:'',gpu:''}}; return ''; }
+function wireProfileForm(){ renderProfileEditor(existingProfileBeingEdited); }
+function renderMyPC(){
+  const el=document.getElementById('mypcCard');
+  if(!PROFILE){ profileFormHTML(null); renderProfileEditor(null); return; }
+  const p=PROFILE;
+  el.innerHTML=`<div class="reqgrid">
+    <div class="reqcard">
+      <h4>YOUR ${(p.formFactor||'DESKTOP').toUpperCase()}</h4>
+      <div class="subverdict" style="margin:-4px 0 12px">${p.formFactor==='Laptop'?'💻 Laptop':'🖥️ Desktop'}</div>
+      <div style="border:1px solid var(--line);border-radius:3px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em">🧠 CPU</div>
+        <div style="font-size:15px;font-weight:600;margin-top:3px">${p.cpu}</div>
+      </div>
+      <div style="border:1px solid var(--line);border-radius:3px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em">🎮 GPU</div>
+        <div style="font-size:15px;font-weight:600;margin-top:3px">${p.gpu}${p.vram?` — ${p.vram} GB`:''}</div>
+      </div>
+      <div class="reqrow"><span class="k">RAM</span><span class="v">${p.ram} GB ${p.ramType||''}</span></div>
+      <div class="reqrow"><span class="k">Storage</span><span class="v">${p.storageGB>=1000?(p.storageGB/1000)+' TB':p.storageGB+' GB'} ${p.storageType||''}</span></div>
+      ${p.res?`<div class="reqrow"><span class="k">Display</span><span class="v">${p.res}p${p.hz?` · ${p.hz}Hz`:''}</span></div>`:''}
+      <div style="margin-top:14px;display:flex;gap:10px"><button class="btn" id="pfEdit">Edit</button><button class="btn" id="pfReset">Reset</button></div>
+    </div>
+    <div class="reqcard rec" id="mypcDash"><h4>DASHBOARD</h4></div>
+  </div>`;
+  document.getElementById('pfEdit').addEventListener('click', ()=>{ profileFormHTML(p); renderProfileEditor(p); });
+  document.getElementById('pfReset').addEventListener('click', ()=>{ if(confirm('Reset your saved PC profile?')) resetProfile(); });
+  const fits = GAMES.map(g=>computeFit(p,g));
+  const n60=fits.filter(f=>f.hi>=60).length, n120=fits.filter(f=>f.hi>=120).length, n144=fits.filter(f=>f.hi>=144).length;
+  const hardest = GAMES[fits.map((f,i)=>({f,i})).filter(x=>x.f.tierClass!=='bad').sort((a,b)=>b.f.tierClass!=='bad'?GAMES[b.i].recScore-GAMES[a.i].recScore:0)[0]?.i || 0];
+  document.getElementById('mypcDash').innerHTML = `<h4>DASHBOARD</h4>
+    <div class="reqrow"><span class="k">Can run</span><span class="v mono">${fits.filter(f=>f.tierClass!=='bad').length} / ${GAMES.length} games</span></div>
+    <div class="reqrow"><span class="k">60+ FPS</span><span class="v mono">${n60} games</span></div>
+    <div class="reqrow"><span class="k">120+ FPS</span><span class="v mono">${n120} games</span></div>
+    <div class="reqrow"><span class="k">144+ FPS</span><span class="v mono">${n144} games</span></div>
+    <div class="reqrow"><span class="k">Toughest playable</span><span class="v">${hardest?hardest.name:'—'}</span></div>`;
+}
+renderMyPC();
+
+// ---------- GAMES I CAN RUN ----------
+let wcrSort='fpsDesc', wcrFpsTarget=0;
+function renderWCR(){
+  const sub=document.getElementById('wcrSub'), panel=document.getElementById('wcrPanel'), list=document.getElementById('wcrList');
+  if(!PROFILE){ sub.textContent='Save your PC above to see this'; panel.innerHTML=''; list.innerHTML=''; return; }
+  sub.textContent = `Based on your saved ${PROFILE.gpu} / ${PROFILE.cpu}`;
+  panel.innerHTML = `<div class="pillrow" style="margin-bottom:10px">
+    ${[0,30,60,75,120,144,165,240,360].map(t=>`<div class="pill ${wcrFpsTarget===t?'active':''}" data-t="${t}">${t===0?'All':t+'+ FPS'}</div>`).join('')}
+  </div>
+  <div class="pillrow">
+    ${[['fpsDesc','Highest FPS'],['fpsAsc','Lowest FPS'],['easiest','Easiest to run'],['hardest','Most demanding'],['newest','Newest'],['oldest','Oldest'],['az','Alphabetical']].map(([k,l])=>`<div class="pill ${wcrSort===k?'active':''}" data-s="${k}">${l}</div>`).join('')}
+  </div>`;
+  panel.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>{wcrFpsTarget=+b.dataset.t; renderWCR();}));
+  panel.querySelectorAll('[data-s]').forEach(b=>b.addEventListener('click',()=>{wcrSort=b.dataset.s; renderWCR();}));
+  let rows = GAMES.map(g=>({g, fit:computeFit(PROFILE,g)}));
+  if(wcrFpsTarget) rows = rows.filter(r=>r.fit.hi>=wcrFpsTarget);
+  const byRec=(a,b)=>a.g.recScore-b.g.recScore;
+  if(wcrSort==='fpsDesc') rows.sort((a,b)=>b.fit.hi-a.fit.hi);
+  else if(wcrSort==='fpsAsc') rows.sort((a,b)=>a.fit.hi-b.fit.hi);
+  else if(wcrSort==='easiest') rows.sort(byRec);
+  else if(wcrSort==='hardest') rows.sort((a,b)=>byRec(b,a));
+  else if(wcrSort==='newest') rows.sort((a,b)=>(b.g.year||0)-(a.g.year||0));
+  else if(wcrSort==='oldest') rows.sort((a,b)=>(a.g.year||9999)-(b.g.year||9999));
+  else if(wcrSort==='az') rows.sort((a,b)=>a.g.name.localeCompare(b.g.name));
+  rows = rows.slice(0,80);
+  list.innerHTML = '<div class="grow ghead"><span></span><span>Title</span><span class="c-genre">Status</span><span>Est. FPS</span><span class="c-gpu">Why</span></div>' +
+    rows.map(({g,fit})=>`<div class="grow" data-id="${g.id}"><div class="thumb" style='${thumbStyle(g)}'>${covers[g.id]?'':mono(g.name)}</div><div class="c-title">${g.name}</div><div class="c-genre">${fit.emoji} ${fit.tier}</div><div class="mono">${fit.lo}–${fit.hi}</div><div class="c-gpu" style="font-size:12px">${fit.bottleneck.split('.')[0]}</div></div>`).join('');
+  list.querySelectorAll('.grow[data-id]').forEach(r=>r.addEventListener('click',()=>openModal(r.dataset.id)));
+}
+renderWCR();
+
+// ---------- HARDWARE DATABASE ----------
+// Curated spec subset: publicly known typical specs for commonly-used parts.
+// Format GPU: [mfr,vram,memType,bus,cores,coreLabel,tdp,arch,year,rt]
+const GPU_SPECS={
+"RTX 5090":["NVIDIA",32,"GDDR7",512,21760,"CUDA",575,"Blackwell",2025,true],
+"RTX 5080":["NVIDIA",16,"GDDR7",256,10752,"CUDA",360,"Blackwell",2025,true],
+"RTX 5070 Ti":["NVIDIA",16,"GDDR7",256,8960,"CUDA",300,"Blackwell",2025,true],
+"RTX 5070":["NVIDIA",12,"GDDR7",192,6144,"CUDA",250,"Blackwell",2025,true],
+"RTX 5060 Ti":["NVIDIA",16,"GDDR7",128,4608,"CUDA",180,"Blackwell",2025,true],
+"RTX 5060":["NVIDIA",8,"GDDR7",128,3840,"CUDA",145,"Blackwell",2025,true],
+"RTX 4090":["NVIDIA",24,"GDDR6X",384,16384,"CUDA",450,"Ada Lovelace",2022,true],
+"RTX 4080 Super":["NVIDIA",16,"GDDR6X",256,10240,"CUDA",320,"Ada Lovelace",2024,true],
+"RTX 4080":["NVIDIA",16,"GDDR6X",256,9728,"CUDA",320,"Ada Lovelace",2022,true],
+"RTX 4070 Ti Super":["NVIDIA",16,"GDDR6X",256,8448,"CUDA",285,"Ada Lovelace",2024,true],
+"RTX 4070 Ti":["NVIDIA",12,"GDDR6X",192,7680,"CUDA",285,"Ada Lovelace",2023,true],
+"RTX 4070 Super":["NVIDIA",12,"GDDR6X",192,7168,"CUDA",220,"Ada Lovelace",2024,true],
+"RTX 4070":["NVIDIA",12,"GDDR6X",192,5888,"CUDA",200,"Ada Lovelace",2023,true],
+"RTX 4060 Ti":["NVIDIA",8,"GDDR6",128,4352,"CUDA",160,"Ada Lovelace",2023,true],
+"RTX 4060":["NVIDIA",8,"GDDR6",128,3072,"CUDA",115,"Ada Lovelace",2023,true],
+"RTX 3090 Ti":["NVIDIA",24,"GDDR6X",384,10752,"CUDA",450,"Ampere",2022,true],
+"RTX 3090":["NVIDIA",24,"GDDR6X",384,10496,"CUDA",350,"Ampere",2020,true],
+"RTX 3080 Ti":["NVIDIA",12,"GDDR6X",384,10240,"CUDA",350,"Ampere",2021,true],
+"RTX 3080":["NVIDIA",10,"GDDR6X",320,8704,"CUDA",320,"Ampere",2020,true],
+"RTX 3070 Ti":["NVIDIA",8,"GDDR6X",256,6144,"CUDA",290,"Ampere",2021,true],
+"RTX 3070":["NVIDIA",8,"GDDR6",256,5888,"CUDA",220,"Ampere",2020,true],
+"RTX 3060 Ti":["NVIDIA",8,"GDDR6",256,4864,"CUDA",200,"Ampere",2020,true],
+"RTX 3060":["NVIDIA",12,"GDDR6",192,3584,"CUDA",170,"Ampere",2021,true],
+"RTX 3050":["NVIDIA",8,"GDDR6",128,2560,"CUDA",130,"Ampere",2022,true],
+"RTX 2080 Ti":["NVIDIA",11,"GDDR6",352,4352,"CUDA",250,"Turing",2018,true],
+"RTX 2070 Super":["NVIDIA",8,"GDDR6",256,2560,"CUDA",215,"Turing",2019,true],
+"RTX 2070":["NVIDIA",8,"GDDR6",256,2304,"CUDA",175,"Turing",2018,true],
+"RTX 2060":["NVIDIA",6,"GDDR6",192,1920,"CUDA",160,"Turing",2019,true],
+"GTX 1660 Super":["NVIDIA",6,"GDDR6",192,1408,"CUDA",125,"Turing",2019,false],
+"GTX 1660 Ti":["NVIDIA",6,"GDDR6",192,1536,"CUDA",120,"Turing",2019,false],
+"GTX 1080 Ti":["NVIDIA",11,"GDDR5X",352,3584,"CUDA",250,"Pascal",2017,false],
+"GTX 1070":["NVIDIA",8,"GDDR5",256,1920,"CUDA",150,"Pascal",2016,false],
+"GTX 1060":["NVIDIA",6,"GDDR5",192,1280,"CUDA",120,"Pascal",2016,false],
+"GTX 1050 Ti":["NVIDIA",4,"GDDR5",128,768,"CUDA",75,"Pascal",2016,false],
+"RX 7900 XTX":["AMD",24,"GDDR6",384,6144,"Stream",355,"RDNA3",2022,true],
+"RX 7900 XT":["AMD",20,"GDDR6",320,5376,"Stream",315,"RDNA3",2022,true],
+"RX 7800 XT":["AMD",16,"GDDR6",256,3840,"Stream",263,"RDNA3",2023,true],
+"RX 7700 XT":["AMD",12,"GDDR6",192,3456,"Stream",245,"RDNA3",2023,true],
+"RX 7600 XT":["AMD",16,"GDDR6",128,2048,"Stream",190,"RDNA3",2024,true],
+"RX 7600":["AMD",8,"GDDR6",128,2048,"Stream",165,"RDNA3",2023,true],
+"RX 6950 XT":["AMD",16,"GDDR6",256,5120,"Stream",335,"RDNA2",2022,true],
+"RX 6900 XT":["AMD",16,"GDDR6",256,5120,"Stream",300,"RDNA2",2020,true],
+"RX 6800 XT":["AMD",16,"GDDR6",256,4608,"Stream",300,"RDNA2",2020,true],
+"RX 6800":["AMD",16,"GDDR6",256,3840,"Stream",250,"RDNA2",2020,true],
+"RX 6700 XT":["AMD",12,"GDDR6",192,2560,"Stream",230,"RDNA2",2021,true],
+"RX 6650 XT":["AMD",8,"GDDR6",128,2048,"Stream",180,"RDNA2",2022,true],
+"RX 6600 XT":["AMD",8,"GDDR6",128,2048,"Stream",160,"RDNA2",2021,true],
+"RX 6600":["AMD",8,"GDDR6",128,1792,"Stream",132,"RDNA2",2021,true],
+"RX 580":["AMD",8,"GDDR5",256,2304,"Stream",185,"Polaris",2017,false],
+"Arc B580":["Intel",12,"GDDR6",192,2560,"Xe",190,"Battlemage",2024,true],
+"Arc A770":["Intel",16,"GDDR6",256,4096,"Xe",225,"Alchemist",2022,true],
+"Arc A750":["Intel",8,"GDDR6",256,3584,"Xe",225,"Alchemist",2022,true],
+"RTX 5090 (Laptop)":["NVIDIA",24,"GDDR7",256,10496,"CUDA",175,"Blackwell",2025,true],
+"RTX 5080 (Laptop)":["NVIDIA",16,"GDDR7",256,7680,"CUDA",175,"Blackwell",2025,true],
+"RTX 5070 Ti (Laptop)":["NVIDIA",12,"GDDR7",192,5888,"CUDA",175,"Blackwell",2025,true],
+"RTX 5070 (Laptop)":["NVIDIA",8,"GDDR7",128,4608,"CUDA",140,"Blackwell",2025,true],
+"RTX 5060 (Laptop)":["NVIDIA",8,"GDDR7",128,3328,"CUDA",115,"Blackwell",2025,true],
+"RTX 4090 (Laptop)":["NVIDIA",16,"GDDR6",256,9728,"CUDA",175,"Ada Lovelace",2023,true],
+"RTX 4080 (Laptop)":["NVIDIA",12,"GDDR6",192,7424,"CUDA",150,"Ada Lovelace",2023,true],
+"RTX 4070 (Laptop)":["NVIDIA",8,"GDDR6",128,4608,"CUDA",115,"Ada Lovelace",2023,true],
+"RTX 4060 (Laptop)":["NVIDIA",8,"GDDR6",128,3072,"CUDA",115,"Ada Lovelace",2023,true],
+"RTX 3080 (Laptop)":["NVIDIA",16,"GDDR6",256,6144,"CUDA",150,"Ampere",2021,true],
+"RTX 3070 (Laptop)":["NVIDIA",8,"GDDR6",256,5120,"CUDA",130,"Ampere",2021,true],
+"RTX 3060 (Laptop)":["NVIDIA",6,"GDDR6",192,3840,"CUDA",115,"Ampere",2021,true],
+};
+// Format CPU: [mfr,cores,threads,base,boost,cache,tdpBase,tdpTurbo,arch,year,igpu]
+const CPU_SPECS={
+"Intel i9-14900K":["Intel",24,32,3.2,6.0,36,125,253,"Raptor Lake Refresh",2023,"UHD 770"],
+"Intel i7-14700K":["Intel",20,28,3.4,5.6,33,125,253,"Raptor Lake Refresh",2023,"UHD 770"],
+"Intel i5-14600K":["Intel",14,20,3.5,5.3,24,125,181,"Raptor Lake Refresh",2023,"UHD 770"],
+"Intel i9-13900K":["Intel",24,32,3.0,5.8,36,125,253,"Raptor Lake",2022,"UHD 770"],
+"Intel i7-13700K":["Intel",16,24,3.4,5.4,30,125,253,"Raptor Lake",2022,"UHD 770"],
+"Intel i5-13600K":["Intel",14,20,3.5,5.1,24,125,181,"Raptor Lake",2022,"UHD 770"],
+"Intel i7-12700K":["Intel",12,20,3.6,5.0,25,125,190,"Alder Lake",2021,"UHD 770"],
+"Intel i5-12400":["Intel",6,12,2.5,4.4,18,65,117,"Alder Lake",2022,"UHD 730"],
+"Intel Core Ultra 9 285K":["Intel",24,24,3.7,5.7,36,125,250,"Arrow Lake",2024,"Arc 140T"],
+"Intel Core Ultra 7 265K":["Intel",20,20,3.9,5.5,30,125,250,"Arrow Lake",2024,"Arc 140T"],
+"Intel Core Ultra 5 245K":["Intel",14,14,4.2,5.2,24,125,159,"Arrow Lake",2024,"Arc 140T"],
+"Intel i7-9700K":["Intel",8,8,3.6,4.9,12,95,95,"Coffee Lake Refresh",2018,"UHD 630"],
+"Ryzen 9 9950X3D":["AMD",16,32,4.3,5.7,128,170,170,"Zen5",2025,"RDNA2 (basic)"],
+"Ryzen 7 9800X3D":["AMD",8,16,4.7,5.2,96,120,120,"Zen5",2024,"RDNA2 (basic)"],
+"Ryzen 5 9600X":["AMD",6,12,3.9,5.4,32,65,105,"Zen5",2024,"RDNA2 (basic)"],
+"Ryzen 9 7950X":["AMD",16,32,4.5,5.7,64,170,230,"Zen4",2022,"RDNA2 (basic)"],
+"Ryzen 9 7900X":["AMD",12,24,4.7,5.6,64,170,230,"Zen4",2022,"RDNA2 (basic)"],
+"Ryzen 7 7800X3D":["AMD",8,16,4.2,5.0,96,120,162,"Zen4",2023,"RDNA2 (basic)"],
+"Ryzen 7 7700X":["AMD",8,16,4.5,5.4,32,105,142,"Zen4",2022,"RDNA2 (basic)"],
+"Ryzen 5 7600X":["AMD",6,12,4.7,5.3,32,105,142,"Zen4",2022,"RDNA2 (basic)"],
+"Ryzen 9 5900X":["AMD",12,24,3.7,4.8,64,105,142,"Zen3",2020,"none"],
+"Ryzen 7 5800X3D":["AMD",8,16,3.4,4.5,96,105,142,"Zen3",2022,"none"],
+"Ryzen 5 5600X":["AMD",6,12,3.7,4.6,32,65,76,"Zen3",2020,"none"],
+"Intel i9-14900HX (Laptop)":["Intel",24,32,2.2,5.8,36,55,157,"Raptor Lake Refresh",2024,"UHD"],
+"Intel i7-13700HX (Laptop)":["Intel",16,24,2.1,5.0,30,55,157,"Raptor Lake",2023,"UHD"],
+"Intel Core Ultra 9 185H (Laptop)":["Intel",16,22,2.3,5.1,24,45,115,"Meteor Lake",2023,"Arc 8-core"],
+"Intel Core Ultra 7 155H (Laptop)":["Intel",16,22,1.4,4.8,24,28,115,"Meteor Lake",2023,"Arc 8-core"],
+"Intel i7-12700H (Laptop)":["Intel",14,20,2.3,4.7,24,45,115,"Alder Lake",2022,"Iris Xe"],
+"Ryzen 9 7945HX (Laptop)":["AMD",16,32,2.5,5.4,64,55,75,"Zen4",2023,"RDNA2"],
+"Ryzen 9 8945HS (Laptop)":["AMD",8,16,4.0,5.2,16,35,54,"Zen4",2024,"Radeon 780M"],
+"Ryzen 7 7840HS (Laptop)":["AMD",8,16,3.8,5.1,16,28,54,"Zen4",2023,"Radeon 780M"],
+"Ryzen AI 9 HX 370 (Laptop)":["AMD",12,24,2.0,5.1,36,28,54,"Zen5",2024,"Radeon 890M"],
+"Ryzen 5 7640HS (Laptop)":["AMD",6,12,4.3,5.0,22,28,54,"Zen4",2023,"Radeon 760M"],
+"Apple M3 Pro (Laptop)":["Apple",12,12,0,4.05,0,0,40,"Apple Silicon",2023,"18-core GPU"],
+"Apple M4 Pro (Laptop)":["Apple",14,14,0,4.5,0,0,45,"Apple Silicon",2024,"20-core GPU"],
+};
+function tierOf(score){
+  if(score>=85) return {name:'Enthusiast',cls:'ok'};
+  if(score>=65) return {name:'High-End',cls:'ok'};
+  if(score>=45) return {name:'Performance',cls:'warn'};
+  if(score>=25) return {name:'Mainstream',cls:'warn'};
+  if(score>=12) return {name:'Budget',cls:'bad'};
+  return {name:'Entry Level',cls:'bad'};
+}
+function hwMfr(name,kind){
+  const spec=(kind==='gpu'?GPU_SPECS:CPU_SPECS)[name];
+  if(spec) return spec[0];
+  if(/RTX|GTX/.test(name)) return 'NVIDIA';
+  if(/RX |Radeon/.test(name)) return 'AMD';
+  if(/Arc /.test(name)) return 'Intel';
+  if(/Ryzen/.test(name)) return 'AMD';
+  if(/Intel|Core|Pentium/.test(name)) return 'Intel';
+  if(/Apple/.test(name)) return 'Apple';
+  return 'Other';
+}
+let hwKind='gpu', hwForm='Desktop';
+function hwRowHTML(name,score){
+  const spec=(hwKind==='gpu'?GPU_SPECS:CPU_SPECS)[name];
+  const t=tierOf(score);
+  const detail = spec ? (hwKind==='gpu'
+    ? `${spec[1]}GB ${spec[2]} · ${spec[3]}-bit · ${spec[4].toLocaleString()} ${spec[5]} · ${spec[6]}W · ${spec[7]} · ${spec[8]}`
+    : `${spec[1]}C/${spec[2]}T · ${spec[3]||'—'}–${spec[4]}GHz · ${spec[5]}MB cache · ${spec[6]}–${spec[7]}W · ${spec[8]} · ${spec[9]}`)
+    : 'Score-based only — detailed specs not yet added';
+  return `<div class="grow" style="grid-template-columns:1fr 90px 130px" data-hw="${name}">
+    <div><div class="c-title" style="font-size:14px">${name}</div><div class="c-gpu" style="font-size:11.5px">${detail}</div></div>
+    <div class="mono" style="font-size:12px;color:var(--faint)">${score}</div>
+    <div><span class="pill ${t.cls==='ok'?'active':''}" style="font-size:11px;padding:4px 9px;cursor:default">${t.name}</span></div>
+  </div>`;
+}
+function renderHW(){
+  const DB = hwKind==='gpu'?GPU:CPU;
+  const isLaptop = k => /\(Laptop\)/.test(k);
+  let keys = Object.keys(DB).filter(k=> hwForm==='Laptop' ? isLaptop(k) : !isLaptop(k));
+  const q=(document.getElementById('hwSearch').value||'').toLowerCase();
+  const mfrSel=document.getElementById('hwMfr').value, tierSel=document.getElementById('hwTier').value;
+  if(q) keys=keys.filter(k=>k.toLowerCase().includes(q));
+  if(mfrSel) keys=keys.filter(k=>hwMfr(k,hwKind)===mfrSel);
+  if(tierSel) keys=keys.filter(k=>tierOf(DB[k]).name===tierSel);
+  keys.sort((a,b)=>DB[b]-DB[a]);
+  document.getElementById('hwCount').textContent = `${keys.length} ${hwKind==='gpu'?'GPUs':'CPUs'} · ${hwForm}`;
+  document.getElementById('hwList').innerHTML = keys.map(k=>hwRowHTML(k,DB[k])).join('') || '<div style="padding:20px;color:var(--faint)">No matches</div>';
+  const mfrs=[...new Set(Object.keys(DB).filter(k=>hwForm==='Laptop'?isLaptop(k):!isLaptop(k)).map(k=>hwMfr(k,hwKind)))].sort();
+  document.getElementById('hwMfr').innerHTML = '<option value="">All</option>' + mfrs.map(m=>`<option ${m===mfrSel?'selected':''}>${m}</option>`).join('');
+  document.getElementById('hwTier').innerHTML = '<option value="">All</option>' + ['Enthusiast','High-End','Performance','Mainstream','Budget','Entry Level'].map(t=>`<option ${t===tierSel?'selected':''}>${t}</option>`).join('');
+}
+document.getElementById('hwTypeTabs').querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>{
+  document.getElementById('hwTypeTabs').querySelectorAll('.tabbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  hwKind=b.dataset.k; renderHW();
+}));
+document.getElementById('hwFormTabs').querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>{
+  document.getElementById('hwFormTabs').querySelectorAll('.pill').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  hwForm=b.dataset.f; renderHW();
+}));
+document.getElementById('hwSearch').addEventListener('input',renderHW);
+document.getElementById('hwMfr').addEventListener('change',renderHW);
+document.getElementById('hwTier').addEventListener('change',renderHW);
+document.getElementById('hwList').addEventListener('click',e=>{
+  const row=e.target.closest('[data-hw]'); if(!row) return;
+  const sel = hwKind==='gpu' ? cmpGpuA : cmpCpuA;
+  sel.value = row.dataset.hw; renderCompare();
+  document.getElementById('cmpResult').scrollIntoView({behavior:'smooth'});
+});
+renderHW();
+
+document.getElementById('checkBtn').addEventListener('click', ()=>{
+  const gpuName = gpuSel.value, cpuName = cpuSel.value, ram = parseInt(document.getElementById('ramSel').value);
+  const gpuScore = GPU[gpuName], cpuScore = CPU[cpuName];
+  const g = currentGame;
+
+  // verdict vs min/rec
+  let tier, tierClass;
+  if(gpuScore >= g.recScore && cpuScore >= g.recScore*0.75 && ram >= g.rec.ram){ tier="Runs great"; tierClass="ok"; }
+  else if(gpuScore >= g.minScore && cpuScore >= g.minScore*0.75 && ram >= g.min.ram){ tier="Runs, below recommended"; tierClass="warn"; }
+  else { tier="Below minimum requirements"; tierClass="bad"; }
+
+  // FPS across presets at chosen resolution
+  const presets = ["Low","Medium","High","Ultra"];
+  const results = presets.map(q => ({q, ...fpsAt(g, gpuScore, cpuScore, ram, curRes, q, curUpscale)}));
+  const chosen = results.find(r=>r.q===curQual);
+
+  // frame generation
+  const fgAvailable = curFG==='off' ? true : (curFG==='2x' ? /RTX (4|5)\d{3}|RX (7|9)\d{3}|Arc B/.test(gpuName) : /RTX 50\d{2}/.test(gpuName));
+  const fgMult = (curFG!=='off' && fgAvailable) ? (curFG==='2x'?1.75:3.1) : 1;
+  const fgNote = curFG!=='off' && !fgAvailable
+    ? `<div class="bottleneck" style="margin-top:-6px">⚠️ Frame Generation ${curFG} needs a newer/higher-tier GPU than <b>${gpuName}</b> — showing rendered FPS without it.</div>` : '';
+
+  const gpuPct = Math.min(100, Math.round((gpuScore/100)*100));
+  const cpuPct = Math.min(100, Math.round((cpuScore/100)*100));
+  const ramPct = Math.min(100, Math.round((ram/64)*100));
+  const gpuBound = chosen.gpuFPS <= chosen.cpuCap;
+  const bottleneckText = gpuBound
+    ? `Your <b>${gpuName}</b> is the limiting component — the GPU is working harder than your CPU at this resolution/quality.`
+    : `Your <b>${cpuName}</b> is the limiting component — a faster GPU alone won't gain much more FPS here.`;
+
+  // upgrade suggestions if bad/warn
+  let upgradeHTML = '';
+  if(tierClass !== 'ok'){
+    const nextGpu = Object.keys(GPU).filter(k=>GPU[k]>gpuScore).sort((a,b)=>GPU[a]-GPU[b])[0];
+    const nextCpu = Object.keys(CPU).filter(k=>CPU[k]>cpuScore).sort((a,b)=>CPU[a]-CPU[b])[0];
+    const items = [];
+    if(gpuBound && nextGpu) items.push(`<div class="upgitem"><span>Upgrade GPU</span><span class="mono">${gpuName} → ${nextGpu}</span></div>`);
+    if(!gpuBound && nextCpu) items.push(`<div class="upgitem"><span>Upgrade CPU</span><span class="mono">${cpuName} → ${nextCpu}</span></div>`);
+    if(ram < g.rec.ram) items.push(`<div class="upgitem"><span>Add memory</span><span class="mono">${ram} GB → ${g.rec.ram}+ GB</span></div>`);
+    upgradeHTML = `<div class="upgrades"><h4>SUGGESTED UPGRADES</h4><div class="upglist">${items.join('')}</div></div>`;
+  }
+
+  document.getElementById('resultSlot').innerHTML = `
+    <div class="resultbox ${tierClass}">
+      <div class="verdict"><span class="dot ${tierClass}"></span>${tier}</div>
+      <div class="subverdict">Estimate for ${g.name} at ${curRes}p, ${curQual} preset${curUpscale!=='Off'?` · ${curUpscale} upscaling`:''}${(curFG!=='off'&&fgAvailable)?` · Frame Gen ${curFG}`:''}</div>
+      <div class="fpsrow">
+        ${results.map(r=>{const [lo,hi]=fpsRange(r.fps*fgMult);return `<div class="fpscell ${r.q===curQual?'sel':''}"><div class="lbl">${r.q}</div><div class="num" style="font-size:20px">${lo}–${hi}</div></div>`;}).join('')}
+      </div>
+      <div class="subverdict" style="margin-top:-10px">Modeled estimate, not a guaranteed benchmark — real FPS varies with drivers, background load and game updates.</div>
+      ${fgMult>1?`<div class="subverdict" style="margin-top:-10px">Rendered ~${Math.max(1,Math.round(chosen.fps))} FPS boosted by Frame Gen (includes interpolated frames)</div>`:''}
+      ${fgNote}
+      <div class="bars">
+        <div class="barrow"><span>GPU score</span><div class="bartrack"><div class="barfill" style="width:${gpuPct}%"></div></div><span class="mono">${gpuScore}</span></div>
+        <div class="barrow"><span>CPU score</span><div class="bartrack"><div class="barfill" style="width:${cpuPct}%"></div></div><span class="mono">${cpuScore}</span></div>
+        <div class="barrow"><span>RAM</span><div class="bartrack"><div class="barfill" style="width:${ramPct}%"></div></div><span class="mono">${ram}GB</span></div>
+      </div>
+      <div class="bottleneck">⚠️ ${bottleneckText}</div>
+      ${upgradeHTML}
+    </div>`;
+});
+</script>
+</body>
+</html>
